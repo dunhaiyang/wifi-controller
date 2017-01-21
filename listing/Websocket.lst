@@ -1,0 +1,216 @@
+C51 COMPILER V9.54   WEBSOCKET                                                             01/10/2017 18:08:21 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE WEBSOCKET
+OBJECT MODULE PLACED IN ..\output\Websocket.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\MiddlewareWesocket\Websocket.c LARGE OPTIMIZE(8,SPEED) BROWS
+                    -E INCDIR(.\HeadFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Command_Conter;.\HeadFile
+                    -\App\Command_DataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile\App\Command_WhiteLis
+                    -t;.\HeadFile\App\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareWesocket) DEBUG OBJECTEXTEND PRINT(.
+                    -.\listing\Websocket.lst) OBJECT(..\output\Websocket.obj)
+
+line level    source
+
+   1          #include "Websocket.h"
+   2          
+   3          
+   4          #define WEBSOCK_HEADER_GET                                                              "GET "
+   5          
+   6          #define WEBSOCK_HEADER_GET_LENGTH                                               4
+   7          
+   8          #define WEBSOCK_HEADER_GET_ADDRESS                                              "/apartment/websocket/control?00000026"
+   9          
+  10          #define WEBSOCK_HEADER_GET_ADDRESS_LENGTH                               37
+  11          
+  12          #define WEBSOCK_HEADER_HTTP                                                             " HTTP/1.1\r\n"
+  13          
+  14          #define WEBSOCK_HEADER_HTTP_LENGTH                                              11
+  15          
+  16          #define WEBSOCK_HEADER_HOST                                                             "Host: "
+  17          
+  18          #define WEBSOCK_HEADER_HOST_LENGTH                                              6
+  19          
+  20          #define WEBSOCK_HEADER_UPGRADE                                                  "Upgrade: websocket\r\n"
+  21          
+  22          #define WEBSOCK_HEADER_UPGRADE_LENGTH                                   20
+  23          
+  24          #define WEBSOCK_HEADER_CONNECTION                                               "Connection: Upgrade\r\n"
+  25          
+  26          #define WEBSOCK_HEADER_CONNECTION_LENGTH                                21
+  27          
+  28          #define WEBSOCK_HEADER_KEY                                                              "Sec-WebSocket-Key: v0mFxeDYcUHVLZuNnLmIlg==\r\n"
+  29          
+  30          #define WEBSOCK_HEADER_KEY_LENGTH                                               45
+  31          
+  32          #define WEBSOCK_HEADER_VERSION                                                  "Sec-WebSocket-Version: 13\r\n"
+  33          
+  34          #define WEBSOCK_HEADER_VERSION_LENGTH                                   27
+  35          
+  36          #define WEBSOCK_HEADER_PRAGMA                                                   "Pragma: no-cache\r\n"
+  37          
+  38          #define WEBSOCK_HEADER_PRAGMA_LENGTH                                    18
+  39          
+  40          #define WEBSOCK_HEADER_CONTROL                                                  "Cache-Control: no-cache\r\n\r\n"
+  41          
+  42          #define WEBSOCK_HEADER_CONTROL_LENGTH                                   27
+  43          
+  44          
+  45          void Websocket_SendShakehand(uint8_t *locaIp, uint16_t locaPort, uint8_t *handShakeBuffer, uint16_t *handS
+             -hakeBufferLen)
+  46          {
+  47   1              uint16_t        handShakeLen = 0;
+  48   1              
+  49   1              //  检查参数合法性
+  50   1              //
+C51 COMPILER V9.54   WEBSOCKET                                                             01/10/2017 18:08:21 PAGE 2   
+
+  51   1      //      if (!ip || !handShakeBuffer && !handShakeBufferLen)
+  52   1      //      {
+  53   1      //              return 0;
+  54   1      //      }
+  55   1              
+  56   1              // GET /websocket/controller?12345678 HTTP/1.1\r\n
+  57   1              //
+  58   1              memcpy(handShakeBuffer + handShakeLen, WEBSOCK_HEADER_GET, WEBSOCK_HEADER_GET_LENGTH);
+  59   1              handShakeLen += WEBSOCK_HEADER_GET_LENGTH;
+  60   1              
+  61   1              memcpy(handShakeBuffer + handShakeLen, WEBSOCK_HEADER_GET_ADDRESS, WEBSOCK_HEADER_GET_ADDRESS_LENGTH);
+  62   1              handShakeLen += WEBSOCK_HEADER_GET_ADDRESS_LENGTH;
+  63   1              
+  64   1              memcpy(handShakeBuffer + handShakeLen, WEBSOCK_HEADER_HTTP, WEBSOCK_HEADER_HTTP_LENGTH);
+  65   1              handShakeLen += WEBSOCK_HEADER_HTTP_LENGTH;
+  66   1              
+  67   1              // Host: xxx.xxx.xxx.xxx:xxxx\r\n
+  68   1              //
+  69   1              memcpy(handShakeBuffer + handShakeLen, WEBSOCK_HEADER_HOST, WEBSOCK_HEADER_HOST_LENGTH);
+  70   1              handShakeLen += WEBSOCK_HEADER_HOST_LENGTH;
+  71   1              
+  72   1              handShakeLen += sprintf(handShakeBuffer + handShakeLen, "%u.%u.%u.%u:%u\r\n", (uint16_t)(locaIp[0]),
+  73   1                                                                                                                                                                        (uint16_t)(locaIp[1]),
+  74   1                                                                                                                                                                        (uint16_t)(locaIp[2]),
+  75   1                                                                                                                                                                        (uint16_t)(locaIp[3]),
+  76   1                                                                                                                                                                        (uint16_t)(locaPort));
+  77   1              // Upgrade: websocket\r\n
+  78   1              //
+  79   1              memcpy(handShakeBuffer + handShakeLen, WEBSOCK_HEADER_UPGRADE, WEBSOCK_HEADER_UPGRADE_LENGTH);
+  80   1              handShakeLen += WEBSOCK_HEADER_UPGRADE_LENGTH;
+  81   1              
+  82   1              // Connection: Upgrade\r\n
+  83   1              //
+  84   1              memcpy(handShakeBuffer + handShakeLen, WEBSOCK_HEADER_CONNECTION, WEBSOCK_HEADER_CONNECTION_LENGTH);
+  85   1              handShakeLen += WEBSOCK_HEADER_CONNECTION_LENGTH;
+  86   1              
+  87   1              // Sec-WebSocket-Key: xxxxxxxxxxxxxxxxxxx\r\n
+  88   1              //
+  89   1              memcpy(handShakeBuffer + handShakeLen, WEBSOCK_HEADER_KEY, WEBSOCK_HEADER_KEY_LENGTH);
+  90   1              handShakeLen += WEBSOCK_HEADER_KEY_LENGTH;
+  91   1              
+  92   1              // Sec_WebSocket-Version: 13\r\n
+  93   1              //
+  94   1              memcpy(handShakeBuffer + handShakeLen, WEBSOCK_HEADER_VERSION, WEBSOCK_HEADER_VERSION_LENGTH);
+  95   1              handShakeLen += WEBSOCK_HEADER_VERSION_LENGTH;
+  96   1              
+  97   1              // Pragma: no-cache\r\n
+  98   1              //
+  99   1              memcpy(handShakeBuffer + handShakeLen, WEBSOCK_HEADER_PRAGMA, WEBSOCK_HEADER_PRAGMA_LENGTH);
+ 100   1              handShakeLen += WEBSOCK_HEADER_PRAGMA_LENGTH;
+ 101   1              
+ 102   1              // Cache-Control: no-cache\r\n
+ 103   1              //
+ 104   1              memcpy(handShakeBuffer + handShakeLen, WEBSOCK_HEADER_CONTROL, WEBSOCK_HEADER_CONTROL_LENGTH);
+ 105   1              handShakeLen += WEBSOCK_HEADER_CONTROL_LENGTH;
+ 106   1              
+ 107   1              // 设置websocket的字符串
+ 108   1              //
+ 109   1              *handShakeBufferLen = handShakeLen;
+ 110   1      }
+ 111          
+ 112          
+C51 COMPILER V9.54   WEBSOCKET                                                             01/10/2017 18:08:21 PAGE 3   
+
+ 113          bool Websocket_ReceiveShakehand(uint8_t *handShakeBuffer, uint16_t handShakeBufferLen)
+ 114          {
+ 115   1              handShakeBuffer[handShakeBufferLen] = 0;
+ 116   1              
+ 117   1              if (strstr(handShakeBuffer, "HTTP/1.1 101"))
+ 118   1              {
+ 119   2                      return 1;
+ 120   2              }
+ 121   1              
+ 122   1              return 0;
+ 123   1      }
+ 124          
+ 125          
+ 126          
+ 127          // receiveBuffer指向数据包（帧头+负载数据）， 长度为receiveBufferLen
+ 128          // frameFirstByte最终指向负载数据（不包括负载长度和掩码）的第一个字节的位置， 返回负载数据的长度
+ 129          //
+ 130          uint16_t Websocket_ReceiveFrameText(uint8_t *receiveBuffer, uint16_t receiveBufferLen, uint8_t **frameFirs
+             -tByte)
+ 131          {
+ 132   1              uint16_t  payloadLen = 0;
+ 133   1              
+ 134   1              // 检查有没有接收到websocket的帧头
+ 135   1              //
+ 136   1              if (receiveBuffer[0] != 0x81)
+ 137   1              {
+ 138   2                      return 0;
+ 139   2              }
+ 140   1              
+ 141   1              // 获取websocket的负载长度
+ 142   1              //
+ 143   1              if (receiveBuffer[1] < 0x7E)
+ 144   1              {
+ 145   2                      payloadLen = receiveBuffer[1];
+ 146   2                      
+ 147   2                      *frameFirstByte = receiveBuffer + 2;
+ 148   2                      
+ 149   2                      receiveBufferLen -= 2;
+ 150   2              }
+ 151   1              else if (receiveBuffer[1] == 0x7E)
+ 152   1              {
+ 153   2                      payloadLen = (receiveBuffer[2] << 8) | receiveBuffer[3];
+ 154   2                      
+ 155   2                      *frameFirstByte = receiveBuffer + 4;
+ 156   2                      
+ 157   2                      receiveBufferLen -= 4;
+ 158   2              }
+ 159   1              else
+ 160   1              {
+ 161   2                      return 0;
+ 162   2              }
+ 163   1              
+ 164   1              // 对比数据长度和负载长度
+ 165   1              //
+ 166   1              if (payloadLen != receiveBufferLen)
+ 167   1              {
+ 168   2                      return 0;
+ 169   2              }
+ 170   1              
+ 171   1              return payloadLen;
+ 172   1      }
+ 173          
+C51 COMPILER V9.54   WEBSOCKET                                                             01/10/2017 18:08:21 PAGE 4   
+
+ 174          
+ 175          
+ 176          
+ 177          
+ 178          
+ 179          
+ 180          
+ 181          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    992    ----
+   CONSTANT SIZE    =    256    ----
+   XDATA SIZE       =   ----      24
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

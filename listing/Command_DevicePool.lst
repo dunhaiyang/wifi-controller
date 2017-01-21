@@ -1,0 +1,403 @@
+C51 COMPILER V9.54   COMMAND_DEVICEPOOL                                                    01/20/2017 14:38:16 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE COMMAND_DEVICEPOOL
+OBJECT MODULE PLACED IN ..\output\Command_DevicePool.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\App\Command_Device\Command_DevicePool.c LARGE OPTIMIZE(8,SPE
+                    -ED) BROWSE INCDIR(.\HeadFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Command_Conter;.
+                    -\HeadFile\App\Command_DataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile\App\Command
+                    -_WhiteList;.\HeadFile\App\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareMenu;.\HeadFile\MiddlewareT
+                    -ask;.\HeadFile\MiddlewareWireless;.\HeadFile\MiddlewareSocket;.\HeadFile\MiddlewareWesocket) DEBUG OBJECTEXTEND PRINT(..
+                    -\listing\Command_DevicePool.lst) OBJECT(..\output\Command_DevicePool.obj)
+
+line level    source
+
+   1          #include "Command_DevicePool.h"
+   2          
+   3          
+   4          uint8_t DevicePool_DeviceType = 0;
+   5          
+   6          
+   7          int8_t __NextNormalDeviceList()
+   8          {
+   9   1          static uint8_t index = 0;
+  10   1          
+  11   1          uint8_t tmpIndex = index;           // 保存index历史值, 用于分成[index, 50], [0, index]两个区间来搜索
+  12   1          
+  13   1          // 查询[index, NormalDeviceListSum]区间的有效设备列表
+  14   1          //
+  15   1          for (; index < NormalDeviceListSum; index++)
+  16   1          {
+  17   2              if (NormalDeviceList[index].deviceValidFlag)
+  18   2              {
+  19   3                  return index++;                 // 返回有效的设备列表数据的下标
+  20   3              }
+  21   2          }
+  22   1          
+  23   1          // 如果[index, NormalDeviceListSum]找不到，那么查询[0, index]区间的有效设备列表
+  24   1          //
+  25   1          for (index = 0; index < tmpIndex; index++)
+  26   1          {
+  27   2              if (NormalDeviceList[index].deviceValidFlag)
+  28   2              {
+  29   3                  return index++;                 // 返回有效的设备列表数据的下标
+  30   3              }
+  31   2          }
+  32   1          
+  33   1          return -1;                              // 已经搜索了设备列表全部数据，找不到
+  34   1      }
+  35          
+  36          
+  37          int8_t __NextSpecialDeviceList()
+  38          {
+  39   1          static uint8_t index = 0;
+  40   1          
+  41   1          uint8_t tmpIndex = index;           // 保存index历史值, 用于分成[index, 50], [0, index]两个区间来搜索
+  42   1          
+  43   1          // 查询[index, NormalDeviceListSum]区间的有效设备列表
+  44   1          //
+  45   1          for (; index < SpecialDeviceListSum; index++)
+  46   1          {
+  47   2              if (SpecialDeviceList[index].deviceValidFlag)
+  48   2              {
+  49   3                  return index++;                 // 返回有效的设备列表数据的下标
+  50   3              }
+C51 COMPILER V9.54   COMMAND_DEVICEPOOL                                                    01/20/2017 14:38:16 PAGE 2   
+
+  51   2          }
+  52   1          
+  53   1          // 如果[index, NormalDeviceListSum]找不到，那么查询[0, index]区间的有效设备列表
+  54   1          //
+  55   1          for (index = 0; index < tmpIndex; index++)
+  56   1          {
+  57   2              if (SpecialDeviceList[index].deviceValidFlag)
+  58   2              {
+  59   3                  return index++;                 // 返回有效的设备列表数据的下标
+  60   3              }
+  61   2          }
+  62   1          
+  63   1          return -1;                              // 已经搜索了设备列表全部数据，找不到
+  64   1      }
+  65          
+  66          
+  67          void __SendDataToNormalDevice(int8_t deviceListIndex)
+  68          {
+  69   1          uint16_t    tmpParityValue = 0;
+  70   1          
+  71   1          // 如果检查到失败次数大于一定次数，那么就切换路由（主路由和备份路由）
+  72   1          //
+  73   1          if (NormalDeviceList[deviceListIndex].deviceFailTimes > 150)
+  74   1          {
+  75   2              NormalDeviceList[deviceListIndex].usingDeviceRouteNow = !(NormalDeviceList[deviceListIndex].usingD
+             -eviceRouteNow);
+  76   2              
+  77   2              NormalDeviceList[deviceListIndex].deviceFailTimes = 0;
+  78   2                              
+  79   2                      NormalDeviceList[deviceListIndex].deviceOnline = 0;
+  80   2          }
+  81   1          
+  82   1          // --------------  开始执行轮询指令  -----------------
+  83   1          //
+  84   1          // 设备编号
+  85   1          //
+  86   1          NRF905_SendBuffer[0] = NormalDeviceList[deviceListIndex].deviceNumber[0];
+  87   1          
+  88   1          NRF905_SendBuffer[1] = NormalDeviceList[deviceListIndex].deviceNumber[1];
+  89   1          
+  90   1          
+  91   1          // 保存当前轮询的设备类型
+  92   1          //
+  93   1          DevicePool_DeviceType = NormalDeviceList[deviceListIndex].deviceType;
+  94   1          
+  95   1          
+  96   1          // 命令编号
+  97   1          //
+  98   1          NRF905_SendBuffer[2] = 0x01;
+  99   1          
+ 100   1          // 命令流水
+ 101   1          //
+ 102   1          NRF905_SendBuffer[3] = DeviceDataSerialNo++;
+ 103   1          
+ 104   1          // 使用备份路由
+ 105   1          //
+ 106   1          if (NormalDeviceList[deviceListIndex].usingDeviceRouteNow)
+ 107   1          {
+ 108   2              NRF905_SendBuffer[4] = NormalDeviceList[deviceListIndex].deviceBakRoute[0];       // 目的中继
+ 109   2              
+ 110   2              
+ 111   2              NRF905_SendBuffer[5] = NormalDeviceList[deviceListIndex].deviceBakRoute[0];       // 中继1
+C51 COMPILER V9.54   COMMAND_DEVICEPOOL                                                    01/20/2017 14:38:16 PAGE 3   
+
+ 112   2              
+ 113   2              
+ 114   2              NRF905_SendBuffer[6] = NormalDeviceList[deviceListIndex].deviceBakRoute[1];       // 中继2
+ 115   2              
+ 116   2              
+ 117   2              NRF905_SendBuffer[7] = NormalDeviceList[deviceListIndex].deviceBakRoute[2];       // 中继3
+ 118   2          }
+ 119   1          // 使用主路由
+ 120   1          //
+ 121   1          else
+ 122   1          {
+ 123   2              NRF905_SendBuffer[4] = NormalDeviceList[deviceListIndex].deviceMainRoute[0];       // 目的中继
+ 124   2              
+ 125   2              
+ 126   2              NRF905_SendBuffer[5] = NormalDeviceList[deviceListIndex].deviceMainRoute[0];       // 中继1
+ 127   2              
+ 128   2              
+ 129   2              NRF905_SendBuffer[6] = NormalDeviceList[deviceListIndex].deviceMainRoute[1];       // 中继2
+ 130   2              
+ 131   2              
+ 132   2              NRF905_SendBuffer[7] = NormalDeviceList[deviceListIndex].deviceMainRoute[2];       // 中继3
+ 133   2          }
+ 134   1          
+ 135   1          // 填充字符
+ 136   1          //
+ 137   1          NRF905_SendBuffer[8] = 0xF1;
+ 138   1          
+ 139   1          // 设备编号
+ 140   1          //
+ 141   1          NRF905_SendBuffer[9] = NRF905_SendBuffer[0];
+ 142   1          
+ 143   1          NRF905_SendBuffer[10] = NRF905_SendBuffer[1];
+ 144   1          
+ 145   1          // 设备类型
+ 146   1          //
+ 147   1          NRF905_SendBuffer[11] = NormalDeviceList[deviceListIndex].deviceType;
+ 148   1          
+ 149   1          // 无线信道
+ 150   1          //
+ 151   1          NRF905_SendBuffer[12] = App_Hal_Api.wireless->channelNo;
+ 152   1          
+ 153   1          // 秒\分\时\日\星期\月\年
+ 154   1          //
+ 155   1          NRF905_SendBuffer[13] = BCD(SysTime.second);
+ 156   1          
+ 157   1          NRF905_SendBuffer[14] = BCD(SysTime.minute);
+ 158   1          
+ 159   1          NRF905_SendBuffer[15] = BCD(SysTime.hour);
+ 160   1          
+ 161   1          NRF905_SendBuffer[16] = BCD(SysTime.day);
+ 162   1          
+ 163   1          NRF905_SendBuffer[17] = BCD(SysTime.week);
+ 164   1          
+ 165   1          NRF905_SendBuffer[18] = BCD(SysTime.month);
+ 166   1          
+ 167   1          NRF905_SendBuffer[19] = BCD(SysTime.year);
+ 168   1          
+ 169   1          // 内部和校验
+ 170   1          //
+ 171   1          tmpParityValue = Temporary_CalcSumParity(NRF905_SendBuffer + 8, 12);
+ 172   1          NRF905_SendBuffer[20] = tmpParityValue;
+ 173   1          NRF905_SendBuffer[21] = tmpParityValue >> 8;
+C51 COMPILER V9.54   COMMAND_DEVICEPOOL                                                    01/20/2017 14:38:16 PAGE 4   
+
+ 174   1          
+ 175   1          // 填充字符0xF1
+ 176   1          //
+ 177   1          memset(NRF905_SendBuffer + 22, 0xF1, 8);
+ 178   1          
+ 179   1          // 外部和校验
+ 180   1          //
+ 181   1          tmpParityValue = Temporary_CalcSumParity(NRF905_SendBuffer, 30);
+ 182   1          NRF905_SendBuffer[Enum_Wirelss_ParityL] = tmpParityValue;
+ 183   1          NRF905_SendBuffer[Enum_Wirelss_ParityH] = tmpParityValue >> 8;
+ 184   1          
+ 185   1          // 发送轮询指令
+ 186   1          //
+ 187   1              App_Hal_Api.wireless->write(NRF905_SendBuffer);
+ 188   1          
+ 189   1              
+ 190   1              // 根据中继来设置无线发送等待超时时间
+ 191   1              //
+ 192   1              Pca_Start(NRF905_SendBuffer, 0);
+ 193   1          
+ 194   1          // 轮询失败计数自增，到达一定数量，会切换主副路由；如果有轮询应答，那么清零，轮询应答逻辑在Command_One
+             -CardDataUpload.c中
+ 195   1          //
+ 196   1          NormalDeviceList[deviceListIndex].deviceFailTimes++;
+ 197   1      }
+ 198          
+ 199          
+ 200          void __SendDataToSpecialDevice(int8_t deviceListIndex)
+ 201          {
+ 202   1          uint16_t   parityValue;
+ 203   1          
+ 204   1          uint8_t   i;
+ 205   1          
+ 206   1          // --------------  开始执行轮询指令  -----------------
+ 207   1          //
+ 208   1          // 设备编号
+ 209   1          //
+ 210   1          NRF905_SendBuffer[0] = SpecialDeviceList[deviceListIndex].deviceNumber[0];
+ 211   1          
+ 212   1          NRF905_SendBuffer[1] = SpecialDeviceList[deviceListIndex].deviceNumber[1];
+ 213   1          
+ 214   1          
+ 215   1          // 命令编号
+ 216   1          //
+ 217   1          NRF905_SendBuffer[2] = 0x01;
+ 218   1          
+ 219   1          
+ 220   1          // 命令流水
+ 221   1          //
+ 222   1          NRF905_SendBuffer[3] = DeviceDataSerialNo++;
+ 223   1        
+ 224   1          
+ 225   1          NRF905_SendBuffer[4] = SpecialDeviceList[deviceListIndex].deviceMainRoute[0];       // 目的中继
+ 226   1          
+ 227   1          
+ 228   1          NRF905_SendBuffer[5] = SpecialDeviceList[deviceListIndex].deviceMainRoute[0];       // 中继1
+ 229   1          
+ 230   1          
+ 231   1          NRF905_SendBuffer[6] = SpecialDeviceList[deviceListIndex].deviceMainRoute[1];       // 中继2
+ 232   1          
+ 233   1          
+ 234   1          NRF905_SendBuffer[7] = SpecialDeviceList[deviceListIndex].deviceMainRoute[2];       // 中继3
+C51 COMPILER V9.54   COMMAND_DEVICEPOOL                                                    01/20/2017 14:38:16 PAGE 5   
+
+ 235   1          
+ 236   1          // 填充字符
+ 237   1          //
+ 238   1          NRF905_SendBuffer[8] = 0xF1;
+ 239   1          
+ 240   1          // 设备编号
+ 241   1          //
+ 242   1          NRF905_SendBuffer[9] = NRF905_SendBuffer[0];
+ 243   1          
+ 244   1          NRF905_SendBuffer[10] = NRF905_SendBuffer[1];
+ 245   1          
+ 246   1          // 设备类型
+ 247   1          //
+ 248   1          NRF905_SendBuffer[11] = 22;                                                         // 电子门锁
+ 249   1          
+ 250   1          
+ 251   1          // 保存当前轮询的设备类型
+ 252   1          //
+ 253   1          DevicePool_DeviceType = 22;
+ 254   1          
+ 255   1          // 无线信道
+ 256   1          //
+ 257   1          NRF905_SendBuffer[12] = App_Hal_Api.wireless->channelNo;
+ 258   1          
+ 259   1          // 秒\分\时\日\星期\月\年
+ 260   1          //
+ 261   1          NRF905_SendBuffer[13] = BCD(SysTime.second);
+ 262   1          
+ 263   1          NRF905_SendBuffer[14] = BCD(SysTime.minute);
+ 264   1          
+ 265   1          NRF905_SendBuffer[15] = BCD(SysTime.hour);
+ 266   1          
+ 267   1          NRF905_SendBuffer[16] = BCD(SysTime.day);
+ 268   1          
+ 269   1          NRF905_SendBuffer[17] = BCD(SysTime.week);
+ 270   1          
+ 271   1          NRF905_SendBuffer[18] = BCD(SysTime.month);
+ 272   1          
+ 273   1          NRF905_SendBuffer[19] = BCD(SysTime.year);
+ 274   1          
+ 275   1          // 填充字符0xF1
+ 276   1          //
+ 277   1          memset(NRF905_SendBuffer + 20, 0xF1, 10);
+ 278   1          
+ 279   1          parityValue = 0;
+ 280   1          
+ 281   1          for (i = Enum_Wirelss_DataStart; i < Enum_Wirelss_DataStart + 12; ++i)
+ 282   1          {
+ 283   2              parityValue += NRF905_SendBuffer[i];
+ 284   2          }
+ 285   1          NRF905_SendBuffer[Enum_Wirelss_DataStart + 12] = parityValue;
+ 286   1          NRF905_SendBuffer[Enum_Wirelss_DataStart + 13] = parityValue >> 8;
+ 287   1          
+ 288   1          
+ 289   1          // 和校验
+ 290   1          //
+ 291   1          parityValue = 0;
+ 292   1          
+ 293   1          for (i = 0; i < 30; ++i)
+ 294   1          {
+ 295   2              parityValue += NRF905_SendBuffer[i];
+ 296   2          }
+C51 COMPILER V9.54   COMMAND_DEVICEPOOL                                                    01/20/2017 14:38:16 PAGE 6   
+
+ 297   1          
+ 298   1          NRF905_SendBuffer[Enum_Wirelss_ParityL] = parityValue;
+ 299   1          
+ 300   1          NRF905_SendBuffer[Enum_Wirelss_ParityH] = parityValue >> 8;
+ 301   1          
+ 302   1          // 发送轮询指令
+ 303   1          //
+ 304   1              App_Hal_Api.wireless->write(NRF905_SendBuffer);
+ 305   1              
+ 306   1              if (NRF905_SendBuffer[4])
+ 307   1              {
+ 308   2                      SpecialDeviceList[deviceListIndex].deviceValidFlag = 0;
+ 309   2                      
+ 310   2                      Pca_SubStart(3000, 0);                                          // 等待15秒
+ 311   2              }
+ 312   1              else
+ 313   1              {
+ 314   2                      Pca_Start(NRF905_SendBuffer, 0);                        // 根据中继来设置无线发送等待超时时间
+ 315   2              }
+ 316   1      }
+ 317          
+ 318          
+ 319          
+ 320          // 函数：轮询发送
+ 321          // 参数：interval表示：多少秒，轮询发送一次
+ 322          //
+ 323          bool DevicePool_SendDataToDevice(void)
+ 324          {
+ 325   1          int8_t   DevicePool_SpecialDeviceListIndex;      // 正在轮询的特殊设备列表下标
+ 326   1          
+ 327   1          int8_t   DevicePool_NormalDeviceListIndex;       // 正在轮询的普通设备列表的下标
+ 328   1          
+ 329   1          
+ 330   1          // -------------- 优先轮询特殊列表的设备 --------------
+ 331   1          //
+ 332   1          DevicePool_SpecialDeviceListIndex = __NextSpecialDeviceList();
+ 333   1          
+ 334   1          if (DevicePool_SpecialDeviceListIndex != -1)
+ 335   1          {
+ 336   2              __SendDataToSpecialDevice(DevicePool_SpecialDeviceListIndex);
+ 337   2              
+ 338   2              return 1;
+ 339   2          }
+ 340   1          
+ 341   1          // -------------- 次优轮询普通列表的设备 --------------
+ 342   1          //
+ 343   1          DevicePool_NormalDeviceListIndex = __NextNormalDeviceList();
+ 344   1          
+ 345   1          if (DevicePool_NormalDeviceListIndex != -1)
+ 346   1          {
+ 347   2              __SendDataToNormalDevice(DevicePool_NormalDeviceListIndex);
+ 348   2                      
+ 349   2                      return 1;
+ 350   2          }
+ 351   1              
+ 352   1              return 0;
+ 353   1      }
+ 354          
+ 355          
+ 356          
+ 357          
+ 358          
+C51 COMPILER V9.54   COMMAND_DEVICEPOOL                                                    01/20/2017 14:38:16 PAGE 7   
+
+ 359          
+ 360          
+ 361          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1596    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =      3       2
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

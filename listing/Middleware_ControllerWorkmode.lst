@@ -1,0 +1,28 @@
+C51 COMPILER V9.54   MIDDLEWARE_CONTROLLERWORKMODE                                         01/10/2017 18:01:02 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE MIDDLEWARE_CONTROLLERWORKMODE
+OBJECT MODULE PLACED IN ..\output\Middleware_ControllerWorkmode.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\MiddlewareWesocket\Middleware_ControllerWorkmode.c LARGE OPT
+                    -IMIZE(8,SPEED) BROWSE INCDIR(.\HeadFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Comma
+                    -nd_Conter;.\HeadFile\App\Command_DataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile\
+                    -App\Command_WhiteList;.\HeadFile\App\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareWesocket) DEBUG 
+                    -OBJECTEXTEND PRINT(..\listing\Middleware_ControllerWorkmode.lst) OBJECT(..\output\Middleware_ControllerWorkmode.obj)
+
+line level    source
+
+   1          #include "Middleware_ControllerWorkmode.h"
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   ----    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

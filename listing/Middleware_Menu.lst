@@ -1,0 +1,340 @@
+C51 COMPILER V9.54   MIDDLEWARE_MENU                                                       01/18/2017 12:57:31 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE MIDDLEWARE_MENU
+OBJECT MODULE PLACED IN ..\output\Middleware_Menu.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\MiddlewareMenu\Middleware_Menu.c LARGE OPTIMIZE(8,SPEED) BRO
+                    -WSE INCDIR(.\HeadFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Command_Conter;.\HeadFi
+                    -le\App\Command_DataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile\App\Command_WhiteL
+                    -ist;.\HeadFile\App\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareMenu;.\HeadFile\MiddlewareTask;.\H
+                    -eadFile\MiddlewareWireless;.\HeadFile\MiddlewareSocket;.\HeadFile\MiddlewareWesocket) DEBUG OBJECTEXTEND PRINT(..\listin
+                    -g\Middleware_Menu.lst) OBJECT(..\output\Middleware_Menu.obj)
+
+line level    source
+
+   1          #include "Middleware_Menu.h"
+   2          
+   3          
+   4          /*
+   5                  =============  1. 伪终端指令(支持xshell)  =================
+   6          */
+   7          
+   8          #ifdef  USING_MODULE_WIFI
+              
+              void Menu_Iwconfig(void *argument)
+              {
+                      Uint8P_Uint8P uint8p_uint8p;
+                      
+                      // 解析到指令名称
+                      //
+                      argument = strtok(argument, " ");
+                      
+                      if (argument)
+                      {
+                              // 解析到第一个参数
+                              //
+                              argument = strtok(0, " ");
+                              
+                              if (argument)
+                              {
+                                      // ---------获取串口波特率
+                                      //
+                                      if (strcmp(argument, "getUart") == 0)
+                                      {
+                                              App_Hal_Api.wifi->getUart();
+                                              
+                                              return;
+                                      }
+                                      // ---------扫描wifi热点
+                                      //
+                                      else if (strcmp(argument, "scan") == 0)
+                                      {
+                                              App_Hal_Api.wifi->scan();
+                                              
+                                              return;
+                                      }
+                                      // ---------连接wifi热点
+                                      //
+                                      else if (strcmp(argument, "ssid") == 0)
+                                      {
+                                              // 解析到ssid后面的参数
+                                              //
+                                              uint8p_uint8p.para1 = strtok(0, " ");
+                                              
+                                              // 解析到password
+C51 COMPILER V9.54   MIDDLEWARE_MENU                                                       01/18/2017 12:57:31 PAGE 2   
+
+                                              //
+                                              argument = strtok(0, " ");
+                                              
+                                              // 解析到password后面的参数
+                                              //
+                                              uint8p_uint8p.para2 = strtok(0, " ");
+                                              
+                                              if (uint8p_uint8p.para1 && uint8p_uint8p.para2)
+                                              {
+                                                      App_Hal_Api.wifi->linkAP(&uint8p_uint8p);
+                                              }
+                                              
+                                              return;
+                                      }
+                                      // ---------查询wifi热点连接状态
+                                      //
+                                      else if (strcmp(argument, "hotspot") == 0)
+                                      {
+                                              App_Hal_Api.wifi->hotspotStatus();
+                                              
+                                              return;
+                                      }
+                                      // ---------网络dhcp分配参数
+                                      //
+                                      else if (strcmp(argument, "dhcp") == 0)
+                                      {
+                                              App_Hal_Api.wifi->dhcp();
+                                              
+                                              return;
+                                      }
+                                      // ----------ping ip
+                                      //
+                                      else if (strcmp(argument, "ping") == 0)
+                                      {
+                                              if (uint8p_uint8p.para1 = strtok(0, " "))
+                                              {
+                                                      App_Hal_Api.wifi->ping(uint8p_uint8p.para1);
+                                              }
+                                              
+                                              return;
+                                      }
+                                      // ---------连接服务器
+                                      //
+                                      else if (strcmp(argument, "con") == 0)
+                                      {
+                                              if (uint8p_uint8p.para1 = strtok(0, " "))
+                                              {
+                                                      if (uint8p_uint8p.para2 = strtok(0, " "))
+                                                      {
+                                                              App_Hal_Api.wifi->connectServer(&uint8p_uint8p);
+                                                      }
+                                              }
+                                              
+                                              return;
+                                      }
+                                      // ---------发送网络数据
+                                      //
+                                      else if (strcmp(argument, "write") == 0)
+                                      {
+                                              if (uint8p_uint8p.para1 = strtok(0, " "))
+                                              {
+                                                      App_Hal_Api.wifi->write(uint8p_uint8p.para1, strlen(uint8p_uint8p.para1));
+C51 COMPILER V9.54   MIDDLEWARE_MENU                                                       01/18/2017 12:57:31 PAGE 3   
+
+                                              }
+                                              
+                                              return;
+                                      }
+                                      // ---------查询MAC地址
+                                      //
+                                      else if (strcmp(argument, "mac") == 0)
+                                      {
+                                              App_Hal_Api.wifi->queryMac();
+                                              
+                                              return;
+                                      }
+                                      // ---------重启网络模块
+                                      //
+                                      else if (strcmp(argument, "reboot") == 0)
+                                      {
+                                              App_Hal_Api.wifi->reboot();
+                                              
+                                              return;
+                                      }
+                              }
+                      }
+                      App_Hal_Api.console->printLn("iwconfig getUart");
+                      App_Hal_Api.console->printLn("iwconfig scan");
+                      App_Hal_Api.console->printLn("iwconfig ssid xxx password xxxxxxxx");
+                      App_Hal_Api.console->printLn("iwconfig hotspot");
+                      App_Hal_Api.console->printLn("iwconfig dhcp");
+                      App_Hal_Api.console->printLn("iwconfig ping xxx.xxx.xxx.xx");
+                      App_Hal_Api.console->printLn("iwconfig con xxx.xxx.xxx.xxx xxxxx");
+                      App_Hal_Api.console->printLn("iwconfig write this_is_data");
+                      App_Hal_Api.console->printLn("iwconfig mac");
+                      App_Hal_Api.console->printLn("iwconfig reboot");
+              }
+                      
+              #endif
+ 148          
+ 149          #ifdef  USING_MODULE_NETWORK
+ 150          
+ 151          void Menu_Ifconfig(void *argument)
+ 152          {
+ 153   1              argument = argument;
+ 154   1              
+ 155   1              // 解析到指令名称
+ 156   1              //
+ 157   1              argument = strtok(argument, " ");
+ 158   1              
+ 159   1              if (argument)
+ 160   1              {
+ 161   2                      // 解析到第一个参数
+ 162   2                      //
+ 163   2                      argument = strtok(0, " ");
+ 164   2                      
+ 165   2                      if (argument)
+ 166   2                      {
+ 167   3                              // ---------获取网络所有参数
+ 168   3                              //
+ 169   3                              if (strcmp(argument, "all") == 0)
+ 170   3                              {
+ 171   4                                      App_Hal_Api.network->allParameters();                   
+ 172   4                                      
+ 173   4                                      return;
+ 174   4                              }
+C51 COMPILER V9.54   MIDDLEWARE_MENU                                                       01/18/2017 12:57:31 PAGE 4   
+
+ 175   3                              else if (strcmp(argument, "reboot") == 0)
+ 176   3                              {
+ 177   4                                      App_Hal_Api.network->reboot();                  
+ 178   4                                      
+ 179   4                                      return;
+ 180   4                              }
+ 181   3                      }
+ 182   2              }
+ 183   1              App_Hal_Api.console->printLn("ifconfig all");
+ 184   1              App_Hal_Api.console->printLn("ifconfig reboot");
+ 185   1      }
+ 186                  
+ 187          #endif
+ 188          
+ 189          void Menu_Controller(void *argument)
+ 190          {
+ 191   1              argument = strtok(argument, " ");
+ 192   1              
+ 193   1              if (argument)
+ 194   1              {
+ 195   2                      // 解析到第一个参数
+ 196   2                      //
+ 197   2                      argument = strtok(0, " ");
+ 198   2                      
+ 199   2                      if (argument)
+ 200   2                      {
+ 201   3                              // ---------连接wifi
+ 202   3                              //
+ 203   3                              if (strcmp(argument, "info") == 0)
+ 204   3                              {
+ 205   4                                      uint32_t tmpSystemCoreTime = App_Hal_Api.scheduler->milliseconds();
+ 206   4                                      
+ 207   4                                      App_Hal_Api.console->printDecLn("wirelessChannel: ",  App_Hal_Api.wireless->channelNo);
+ 208   4                                      
+ 209   4                                      App_Hal_Api.console->printDecLn("WiresslessChannel_Status: ",  WiresslessChannel_Status);
+ 210   4                                      
+ 211   4                                      App_Hal_Api.console->printDec("day: ", tmpSystemCoreTime / 1000 / 3600 / 24);
+ 212   4                                      
+ 213   4                                      App_Hal_Api.console->printDec("\thour: ", tmpSystemCoreTime / 1000 / 3600 % 24);
+ 214   4                                      
+ 215   4                                      App_Hal_Api.console->printDec("\tminute: ", tmpSystemCoreTime / 1000 / 60 % 60);
+ 216   4                                      
+ 217   4                                      App_Hal_Api.console->printDec("\tsecond: ", tmpSystemCoreTime / 1000 % 60);
+ 218   4                                      
+ 219   4                                      App_Hal_Api.console->printDecLn("\tmillsecond: ", tmpSystemCoreTime % 1000);
+ 220   4                                      
+ 221   4                                      return;
+ 222   4                              }
+ 223   3                              // ---------网络连接远程服务器
+ 224   3                              //
+ 225   3                              else if (strcmp(argument, "set") == 0)
+ 226   3                              {
+ 227   4                                      return;
+ 228   4                              }
+ 229   3                      }
+ 230   2              }
+ 231   1              App_Hal_Api.console->printLn("controller info");
+ 232   1              App_Hal_Api.console->printLn("controller set");
+ 233   1      }
+ 234          
+ 235          
+ 236          void Menu_Device(void *argument)
+C51 COMPILER V9.54   MIDDLEWARE_MENU                                                       01/18/2017 12:57:31 PAGE 5   
+
+ 237          {
+ 238   1              argument = argument;
+ 239   1              
+ 240   1              NormalDeviceInfo_TravelDeviceList();
+ 241   1      }
+ 242          
+ 243          
+ 244          void Menu_Data(void *argument)
+ 245          {
+ 246   1              argument = argument;
+ 247   1      }
+ 248          
+ 249          
+ 250          void Menu_Uname(void *argument)
+ 251          {
+ 252   1              argument = argument;
+ 253   1      
+ 254   1      #ifdef  USING_MODULE_WIFI
+                      
+                      App_Hal_Api.console->printLn("version: 2017-01-09 WIFI");
+              
+              #endif
+ 259   1              
+ 260   1      #ifdef  USING_MODULE_NETWORK
+ 261   1              
+ 262   1              App_Hal_Api.console->printLn("version: 2017-01-09 CH395");
+ 263   1      
+ 264   1      #endif
+ 265   1      }
+ 266          
+ 267          
+ 268          void Menu_Reboot(void *argument)
+ 269          {
+ 270   1              argument = argument;
+ 271   1              
+ 272   1              App_Hal_Api.scheduler->delayMilliseconds(5000);
+ 273   1              
+ 274   1              App_Hal_Api.hardware->reboot();
+ 275   1      }
+ 276          
+ 277          
+ 278          Menu    menu[6] = {
+ 279          
+ 280          #ifdef  USING_MODULE_WIFI
+                      
+                      {"iwconfig",            Menu_Iwconfig},
+                      
+              #endif
+ 285                  
+ 286          #ifdef  USING_MODULE_NETWORK
+ 287                  
+ 288                  {"ifconfig",            Menu_Ifconfig},
+ 289                  
+ 290          #endif
+ 291                  
+ 292                  {"controller",          Menu_Controller},
+ 293                  
+ 294                  {"device",                      Menu_Device},
+ 295                  
+ 296                  {"data",                        Menu_Data},
+ 297                  
+ 298                  {"uname",                       Menu_Uname},
+C51 COMPILER V9.54   MIDDLEWARE_MENU                                                       01/18/2017 12:57:31 PAGE 6   
+
+ 299                  
+ 300                  {"reboot",                      Menu_Reboot},
+ 301                  
+ 302          };
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1158    ----
+   CONSTANT SIZE    =    201    ----
+   XDATA SIZE       =     84      10
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

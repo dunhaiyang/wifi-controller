@@ -1,0 +1,371 @@
+C51 COMPILER V9.54   CONSOLE                                                               01/18/2017 12:11:30 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE CONSOLE
+OBJECT MODULE PLACED IN ..\output\Console.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\KQA_OS\Console.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(.\Hea
+                    -dFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Command_Conter;.\HeadFile\App\Command_D
+                    -ataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile\App\Command_WhiteList;.\HeadFile\A
+                    -pp\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareMenu;.\HeadFile\MiddlewareTask;.\HeadFile\Middlewa
+                    -reWireless;.\HeadFile\MiddlewareSocket;.\HeadFile\MiddlewareWesocket) DEBUG OBJECTEXTEND PRINT(..\listing\Console.lst) O
+                    -BJECT(..\output\Console.obj)
+
+line level    source
+
+   1          #include "Console.h"
+   2          
+   3          
+   4          static Console *Console_self;
+   5          
+   6          
+   7          #define                 CONSOLE_RECEIVE_MAX                                                     50
+   8          
+   9          
+  10          struct ConsoleData
+  11          {
+  12                  uint8_t console_needPrompt:1;                                                   // 需要打印提示符       
+  13                  
+  14                  uint8_t console_ReceiveBufferLen:7;                                             // 伪终端缓存指令数据数量
+  15                  
+  16                  uint8_t console_ReceiveBuffer[CONSOLE_RECEIVE_MAX];             // 伪终端缓存指令数据
+  17                  
+  18          }Console_ReceiveData;
+  19          
+  20          
+  21          struct ConsoleData consoleData = {1, 0};                                        // 初始化为需要打印提示符
+  22          
+  23          
+  24          // inputString和command假设都是带有伪零的字符串
+  25          //
+  26          bool __findCommand(uint8_t *inputCommand, uint8_t *memuCommand)
+  27          {
+  28   1              // 比较inputCommand前面是否包含memuCommand
+  29   1              //
+  30   1              while (*memuCommand)
+  31   1              {
+  32   2                      if (*inputCommand++ != *memuCommand++)
+  33   2                      {
+  34   3                              return 0;
+  35   3                      }
+  36   2              }
+  37   1              // 满足“command”或者“command argument1 ...”
+  38   1              //
+  39   1              if (*inputCommand == 0 || *inputCommand == ' ')
+  40   1              {
+  41   2                      return 1;
+  42   2              }
+  43   1              return 0;
+  44   1      }
+  45          
+  46          
+  47          bool __containSubstring(uint8_t *inputCommand, uint8_t *memuCommand)
+  48          {
+  49   1              while (*inputCommand)
+  50   1              {
+C51 COMPILER V9.54   CONSOLE                                                               01/18/2017 12:11:30 PAGE 2   
+
+  51   2                      if (*inputCommand++ != *memuCommand++)
+  52   2                      {
+  53   3                              return 0;
+  54   3                      }
+  55   2              }
+  56   1              return 1;
+  57   1      }
+  58          
+  59          
+  60          void Console_Run(void)
+  61          {
+  62   1              // 首次进入终端，打印提示符
+  63   1              //
+  64   1              if (consoleData.console_needPrompt)
+  65   1              {
+  66   2                      consoleData.console_needPrompt = 0;
+  67   2                      
+  68   2                      HAL_CONSOLE_SENDSTRING(Console_self->prompt);
+  69   2              }
+  70   1              
+  71   1              // 获取终端数据
+  72   1              //
+  73   1              while (HAL_CONSOLE_AVAILABLE())
+  74   1              {
+  75   2                      uint8_t index;
+  76   2                      
+  77   2                      uint8_t tmpData = Uart1_ReceiveByte();
+  78   2                      
+  79   2                      // return输入指令完毕
+  80   2                      //
+  81   2                      if ('\r' == tmpData || '\n' == tmpData)
+  82   2                      {
+  83   3                              consoleData.console_ReceiveBuffer[consoleData.console_ReceiveBufferLen++] = 0;
+  84   3                              
+  85   3                              HAL_CONSOLE_SENDSTRING("\r\n");
+  86   3                              
+  87   3                              // 处理指令
+  88   3                              //
+  89   3                              for (index = 0; index < Console_self->menuEntries; index++)
+  90   3                              {
+  91   4                                      if (__findCommand(consoleData.console_ReceiveBuffer, Console_self->menu[index].command))
+  92   4                                      {
+  93   5      //                                      printf("index: %u, len: %u\r\n", (uint16_t)index, (uint16_t)(consoleData.console_ReceiveBufferLen))
+             -;
+  94   5                                              
+  95   5                                              Console_self->menu[index].func(consoleData.console_ReceiveBuffer);
+  96   5                                              
+  97   5                                              HAL_CONSOLE_SENDSTRING("\r\n");
+  98   5                                              
+  99   5                                              break;
+ 100   5                                      }
+ 101   4                              }
+ 102   3                              consoleData.console_needPrompt = 1;
+ 103   3                              
+ 104   3                              consoleData.console_ReceiveBufferLen = 0;
+ 105   3                              
+ 106   3                              return;
+ 107   3                      }
+ 108   2                      
+ 109   2                      // tab 补全功能
+ 110   2                      //
+ 111   2                      if (0x09 == tmpData)
+C51 COMPILER V9.54   CONSOLE                                                               01/18/2017 12:11:30 PAGE 3   
+
+ 112   2                      {
+ 113   3                              uint8_t similarCommand = 0;                                                             // 相似指令名称数量
+ 114   3                              
+ 115   3                              uint8_t onlyOneCommand_Index = 0;                                               // 相似指令名称数量只有1个的索引
+ 116   3                              
+ 117   3                              consoleData.console_ReceiveBuffer[consoleData.console_ReceiveBufferLen] = 0;
+ 118   3                              
+ 119   3                              // 查找总共有多少个相似指令
+ 120   3                              //
+ 121   3                              for (index = 0; index < Console_self->menuEntries; index++)
+ 122   3                              {
+ 123   4                                      if (__containSubstring(consoleData.console_ReceiveBuffer, Console_self->menu[index].command))
+ 124   4                                      {
+ 125   5                                              similarCommand++;
+ 126   5                                              
+ 127   5                                              onlyOneCommand_Index = index;
+ 128   5                                      }
+ 129   4                              }
+ 130   3                              
+ 131   3                              // 相似指令数量大于两个
+ 132   3                              //
+ 133   3                              if (similarCommand >= 2)
+ 134   3                              {
+ 135   4                                      HAL_CONSOLE_SENDSTRING("\r\n");
+ 136   4                                      
+ 137   4                                      for (index = 0; index < Console_self->menuEntries; index++)
+ 138   4                                      {
+ 139   5                                              if (strstr(Console_self->menu[index].command, consoleData.console_ReceiveBuffer))
+ 140   5                                              {
+ 141   6                                                      HAL_CONSOLE_SENDSTRING(Console_self->menu[index].command);
+ 142   6                                                      
+ 143   6                                                      HAL_CONSOLE_SENDSTRING("  ");
+ 144   6                                              }
+ 145   5                                      }
+ 146   4                                      HAL_CONSOLE_SENDSTRING("\r\n");
+ 147   4                                      
+ 148   4                                      // 从新打印提示符和输入的指令内容
+ 149   4                                      //
+ 150   4                                      HAL_CONSOLE_SENDSTRING(Console_self->prompt);
+ 151   4                                      
+ 152   4                                      HAL_CONSOLE_SENDSTRING(consoleData.console_ReceiveBuffer);
+ 153   4                              }
+ 154   3                              // 相似指令数量仅有一个
+ 155   3                              //
+ 156   3                              else if (similarCommand == 1)
+ 157   3                              {
+ 158   4                                      uint8_t tmpInputPoint = consoleData.console_ReceiveBufferLen;                   // 指令输入的点
+ 159   4                                      
+ 160   4                                      consoleData.console_ReceiveBufferLen = strlen(Console_self->menu[onlyOneCommand_Index].command);
+ 161   4                                      
+ 162   4                                      // 拷贝已经找到唯一对应的指令
+ 163   4                                      //
+ 164   4                                      strncpy(consoleData.console_ReceiveBuffer,
+ 165   4                                                 Console_self->menu[onlyOneCommand_Index].command,
+ 166   4                                                 consoleData.console_ReceiveBufferLen);
+ 167   4                                      
+ 168   4                                      consoleData.console_ReceiveBuffer[consoleData.console_ReceiveBufferLen] = 0;
+ 169   4                                      
+ 170   4                                      // 回显未输入完整的指令内容
+ 171   4                                      //
+ 172   4                                      HAL_CONSOLE_SENDSTRING(consoleData.console_ReceiveBuffer + tmpInputPoint);
+ 173   4                              }
+C51 COMPILER V9.54   CONSOLE                                                               01/18/2017 12:11:30 PAGE 4   
+
+ 174   3                              
+ 175   3                              return;
+ 176   3                      }
+ 177   2                      
+ 178   2                      // backspace 退格键
+ 179   2                      //
+ 180   2                      if ('\b' == tmpData)
+ 181   2                      {
+ 182   3                              if (consoleData.console_ReceiveBufferLen > 0)
+ 183   3                              {
+ 184   4                                      consoleData.console_ReceiveBufferLen--;
+ 185   4                                      
+ 186   4                                      HAL_CONSOLE_SENDSTRING("\b \b");
+ 187   4                              }
+ 188   3                              return;
+ 189   3                      }
+ 190   2                      
+ 191   2                      // Ctrl + C 取消这次指令
+ 192   2                      //
+ 193   2                      if (0x03 == tmpData)
+ 194   2                      {
+ 195   3                              HAL_CONSOLE_SENDSTRING("^C\r\n");
+ 196   3                              
+ 197   3                              consoleData.console_needPrompt = 1;
+ 198   3                              
+ 199   3                              consoleData.console_ReceiveBufferLen = 0;
+ 200   3                              
+ 201   3                              return;
+ 202   3                      }
+ 203   2                      
+ 204   2                      // Ctrl + L 清屏
+ 205   2                      //
+ 206   2                      if (0x0c == tmpData)
+ 207   2                      {
+ 208   3                              // 使用linux模拟出来的xshell清屏指令
+ 209   3                              //
+ 210   3                              Uart1_SendByte(0x1B); Uart1_SendByte(0x5B); Uart1_SendByte(0x48); Uart1_SendByte(0x0D);
+ 211   3                              
+ 212   3                              Uart1_SendByte(0x7E); Uart1_SendByte(0x20); Uart1_SendByte(0x23); Uart1_SendByte(0x20);
+ 213   3                              
+ 214   3                              Uart1_SendByte(0x1B); Uart1_SendByte(0x5B); Uart1_SendByte(0x4A);
+ 215   3                              
+ 216   3                              consoleData.console_needPrompt = 1;
+ 217   3                              
+ 218   3                              consoleData.console_ReceiveBufferLen = 0;
+ 219   3                              
+ 220   3                              return;
+ 221   3                      }
+ 222   2                      
+ 223   2                      // 防止越界， 存储指令数据，并且回显
+ 224   2                      //
+ 225   2                      if (consoleData.console_ReceiveBufferLen < CONSOLE_RECEIVE_MAX)
+ 226   2                      {
+ 227   3                              Uart1_SendByte(tmpData);
+ 228   3                              
+ 229   3                              consoleData.console_ReceiveBuffer[consoleData.console_ReceiveBufferLen++] = tmpData;
+ 230   3                      }
+ 231   2              }
+ 232   1      }
+ 233          
+ 234          
+ 235          void Console_SetPrompt(uint8_t *prompt)
+C51 COMPILER V9.54   CONSOLE                                                               01/18/2017 12:11:30 PAGE 5   
+
+ 236          {
+ 237   1              uint8_t index;
+ 238   1              
+ 239   1              for (index = 0; index < PROMPT_MAX && prompt[index]; index++)
+ 240   1              {
+ 241   2                      Console_self->prompt[index] = prompt[index];
+ 242   2              }
+ 243   1              Console_self->prompt[index] = 0;
+ 244   1      }
+ 245          
+ 246          
+ 247          void Console_RegisterMenu(void *menu, uint8_t menuEntries) 
+ 248          {
+ 249   1              Console_self->menu = menu;
+ 250   1              
+ 251   1              Console_self->menuEntries = menuEntries;
+ 252   1      }
+ 253          
+ 254          void Console_Print(uint8_t *str)
+ 255          {
+ 256   1              HAL_CONSOLE_SENDSTRING(str);
+ 257   1      }
+ 258          
+ 259          
+ 260          void Console_Println(uint8_t *str)
+ 261          {
+ 262   1              HAL_CONSOLE_SENDSTRING(str);
+ 263   1              
+ 264   1              HAL_CONSOLE_SENDSTRING("\r\n");
+ 265   1      }
+ 266          
+ 267          
+ 268          void Console_PrintDec(uint8_t *str, uint16_t number)
+ 269          {
+ 270   1              HAL_CONSOLE_SENDSTRING(str);
+ 271   1              
+ 272   1              HAL_CONSOLE_SENDBYTE(number / 10000 % 10 + '0');
+ 273   1              
+ 274   1              HAL_CONSOLE_SENDBYTE(number / 1000 % 10 + '0');
+ 275   1              
+ 276   1              HAL_CONSOLE_SENDBYTE(number / 100 % 10 + '0');
+ 277   1              
+ 278   1              HAL_CONSOLE_SENDBYTE(number / 10 % 10 + '0');
+ 279   1              
+ 280   1              HAL_CONSOLE_SENDBYTE(number % 10 + '0');
+ 281   1      }
+ 282          
+ 283          
+ 284          void Console_PrintlnDec(uint8_t *str, uint16_t number)
+ 285          {
+ 286   1              HAL_CONSOLE_SENDSTRING(str);
+ 287   1              
+ 288   1              HAL_CONSOLE_SENDBYTE(number / 10000 % 10 + '0');
+ 289   1              
+ 290   1              HAL_CONSOLE_SENDBYTE(number / 1000 % 10 + '0');
+ 291   1              
+ 292   1              HAL_CONSOLE_SENDBYTE(number / 100 % 10 + '0');
+ 293   1              
+ 294   1              HAL_CONSOLE_SENDBYTE(number / 10 % 10 + '0');
+ 295   1              
+ 296   1              HAL_CONSOLE_SENDBYTE(number % 10 + '0');
+ 297   1              
+C51 COMPILER V9.54   CONSOLE                                                               01/18/2017 12:11:30 PAGE 6   
+
+ 298   1              HAL_CONSOLE_SENDSTRING("\r\n");
+ 299   1      }
+ 300          
+ 301          
+ 302          void Console_Init(void *self)
+ 303          {
+ 304   1              Console_self = self;
+ 305   1              
+ 306   1              Console_self->init = Console_Init;
+ 307   1              
+ 308   1              Console_self->print = Console_Print;
+ 309   1              
+ 310   1              Console_self->printLn = Console_Println;
+ 311   1              
+ 312   1              Console_self->printDec = Console_PrintDec;
+ 313   1              
+ 314   1              Console_self->printDecLn = Console_PrintlnDec;
+ 315   1              
+ 316   1              Console_self->run = Console_Run;
+ 317   1              
+ 318   1              Console_self->setPrompt = Console_SetPrompt;
+ 319   1              
+ 320   1              Console_self->registerMenu = Console_RegisterMenu;
+ 321   1              
+ 322   1              memcpy(Console_self->prompt, "IAP15:~$ ", 9);
+ 323   1              
+ 324   1              Console_self->menu = 0;
+ 325   1              
+ 326   1              Console_self->menuEntries = 0;
+ 327   1              
+ 328   1              HAL_CONSOLE_INIT();     
+ 329   1      }
+ 330          
+ 331          
+ 332          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1908    ----
+   CONSTANT SIZE    =     25    ----
+   XDATA SIZE       =    105      24
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

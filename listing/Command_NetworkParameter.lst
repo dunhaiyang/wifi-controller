@@ -1,0 +1,92 @@
+C51 COMPILER V9.54   COMMAND_NETWORKPARAMETER                                              01/18/2017 12:57:28 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE COMMAND_NETWORKPARAMETER
+OBJECT MODULE PLACED IN ..\output\Command_NetworkParameter.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\App\Command_Conter\Command_NetworkParameter.c LARGE OPTIMIZE
+                    -(8,SPEED) BROWSE INCDIR(.\HeadFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Command_Co
+                    -nter;.\HeadFile\App\Command_DataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile\App\C
+                    -ommand_WhiteList;.\HeadFile\App\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareMenu;.\HeadFile\Middl
+                    -ewareTask;.\HeadFile\MiddlewareWireless;.\HeadFile\MiddlewareSocket;.\HeadFile\MiddlewareWesocket) DEBUG OBJECTEXTEND PR
+                    -INT(..\listing\Command_NetworkParameter.lst) OBJECT(..\output\Command_NetworkParameter.obj)
+
+line level    source
+
+   1          #include "Command_NetworkParameter.h"
+   2          
+   3          
+   4          void NetworkParameter_SendDataToPC(uint8_t *Data)
+   5          {
+   6   1              uint8_t tmpSerialNo = Data[1];
+   7   1              
+   8   1              // 先验证密码
+   9   1              //
+  10   1              if (memcmp(Data + 39, ControlerInfo.Password, 6))
+  11   1              {
+  12   2                      BoardcastData_SendBuffer[0] = 0x32;
+  13   2                      
+  14   2                      PC_SendCommand_Boardcast(0x64, tmpSerialNo, BoardcastData_SendBuffer, 1);
+  15   2                      
+  16   2                      return;
+  17   2              }
+  18   1              
+  19   1              // 密码通过
+  20   1              //
+  21   1              ControlerInfo.FirstBootup = 0x31;                               // 设置为首次开机
+  22   1              
+  23   1              memcpy(ControlerInfo.Name, Data + 9, 10);
+  24   1              
+  25   1              memcpy(NETPARA_IP, Data + 19, 4);
+  26   1              
+  27   1              memcpy(NETPARA_MASK, Data + 23, 4);
+  28   1              
+  29   1              memcpy(NETPARA_GATEWAY, Data + 27, 4);
+  30   1              
+  31   1              memcpy(&SOCKET0_LOCALPORT, Data + 31, 2);
+  32   1              
+  33   1              memcpy(SOCKET0_REMOTEIP, Data + 33, 4);
+  34   1              
+  35   1              memcpy(&SOCKET0_REMOTEPORT, Data + 37, 2);
+  36   1              
+  37   1              memcpy(ControlerInfo.Password, Data + 45, 6);
+  38   1              
+  39   1              memcpy(ControlerInfo.Info, Data + 51, 10);
+  40   1              
+  41   1              // 应答
+  42   1              //
+  43   1              BoardcastData_SendBuffer[0] = 0x31;
+  44   1              
+  45   1          PC_SendCommand_Boardcast(0x64, tmpSerialNo, BoardcastData_SendBuffer, 1);
+  46   1              
+  47   1              //保存配置信息
+  48   1              //
+  49   1              ControlerInfo_WriteName();
+  50   1              
+C51 COMPILER V9.54   COMMAND_NETWORKPARAMETER                                              01/18/2017 12:57:28 PAGE 2   
+
+  51   1              ControlerInfo_WriteNetworkParameter();
+  52   1              
+  53   1              // 重启
+  54   1              //
+  55   1      //      IAP_CONTR |= 0x60;
+  56   1      
+  57   1      #ifdef USING_MODULE_NETWORK
+  58   1              App_Hal_Api.network->reboot();
+  59   1      #endif
+  60   1      }
+  61          
+  62          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    407    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----       4
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,145 @@
+C51 COMPILER V9.54   COMMAND_REPEATERTEST                                                  01/18/2017 12:57:29 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE COMMAND_REPEATERTEST
+OBJECT MODULE PLACED IN ..\output\Command_RepeaterTest.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\App\Command_Repeater\Command_RepeaterTest.c LARGE OPTIMIZE(8
+                    -,SPEED) BROWSE INCDIR(.\HeadFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Command_Cont
+                    -er;.\HeadFile\App\Command_DataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile\App\Com
+                    -mand_WhiteList;.\HeadFile\App\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareMenu;.\HeadFile\Middlew
+                    -areTask;.\HeadFile\MiddlewareWireless;.\HeadFile\MiddlewareSocket;.\HeadFile\MiddlewareWesocket) DEBUG OBJECTEXTEND PRIN
+                    -T(..\listing\Command_RepeaterTest.lst) OBJECT(..\output\Command_RepeaterTest.obj)
+
+line level    source
+
+   1          #include "Command_RepeaterTest.h"
+   2          
+   3          
+   4          void RepeaterTest_DealData(uint8_t *Data)
+   5          {
+   6   1          uint8_t tmpCommandNo        = Data[Enum_CommandNo];
+   7   1          
+   8   1          uint8_t tmpCommandSerialNo  = Data[Enum_CommandSerialNo];
+   9   1          
+  10   1          uint8_t tmpRepeaterNo       = Data[Enum_CommandContent + 0];
+  11   1          
+  12   1          uint8_t tmpRepeater1        = Data[Enum_CommandContent + 1];
+  13   1          
+  14   1          uint8_t tmpRepeater2        = Data[Enum_CommandContent + 2];
+  15   1          
+  16   1          uint8_t tmpRepeater3        = Data[Enum_CommandContent + 3];
+  17   1          
+  18   1          uint8_t tmpTestPacketNoL    = Data[Enum_CommandContent + 4];
+  19   1          
+  20   1          uint8_t tmpTestPacketNoH    = Data[Enum_CommandContent + 5];
+  21   1          
+  22   1          uint16_t tmpParityValue       = 0;
+  23   1          
+  24   1          
+  25   1          // 设备编号
+  26   1          //
+  27   1          NRF905_SendBuffer[0] = 0xEB;
+  28   1          NRF905_SendBuffer[1] = 0xFD;
+  29   1          
+  30   1          // 命令编号
+  31   1          //
+  32   1          NRF905_SendBuffer[2] = tmpCommandNo;
+  33   1          
+  34   1          // 命令流水号
+  35   1          //
+  36   1          NRF905_SendBuffer[3] = tmpCommandSerialNo;
+  37   1          
+  38   1          // 目的中继
+  39   1          //
+  40   1          NRF905_SendBuffer[4] = tmpRepeater1;
+  41   1          
+  42   1          // 中继1
+  43   1          //
+  44   1          NRF905_SendBuffer[5] = tmpRepeater1;
+  45   1          
+  46   1          // 中继2
+  47   1          //
+  48   1          NRF905_SendBuffer[6] = tmpRepeater2;
+  49   1          
+  50   1          // 中继3
+C51 COMPILER V9.54   COMMAND_REPEATERTEST                                                  01/18/2017 12:57:29 PAGE 2   
+
+  51   1          //
+  52   1          NRF905_SendBuffer[7] = tmpRepeater3;
+  53   1          
+  54   1          // 数据（22字节）
+  55   1          //
+  56   1          NRF905_SendBuffer[8] = 0xA3;
+  57   1          NRF905_SendBuffer[9] = tmpRepeaterNo;
+  58   1          NRF905_SendBuffer[10] = App_Hal_Api.wireless->channelNo;
+  59   1          NRF905_SendBuffer[11] = tmpTestPacketNoL;
+  60   1          NRF905_SendBuffer[12] = tmpTestPacketNoH;
+  61   1          
+  62   1          // 内部和校验
+  63   1          //
+  64   1          tmpParityValue = Temporary_CalcSumParity(NRF905_SendBuffer + 8, 5);
+  65   1          NRF905_SendBuffer[13] = tmpParityValue;
+  66   1          NRF905_SendBuffer[14] = tmpParityValue >> 8;
+  67   1          
+  68   1          // 填充字符0xA3
+  69   1          //
+  70   1          memset(NRF905_SendBuffer + 15, 0xA3, 15);
+  71   1          
+  72   1          // 外部和校验
+  73   1          //
+  74   1          tmpParityValue = Temporary_CalcSumParity(NRF905_SendBuffer, 30);
+  75   1          NRF905_SendBuffer[30] = tmpParityValue;
+  76   1          NRF905_SendBuffer[31] = tmpParityValue >> 8;
+  77   1          
+  78   1          // 发送数据到无线设备
+  79   1          //
+  80   1              App_Hal_Api.wireless->write(NRF905_SendBuffer);
+  81   1              
+  82   1              // 根据中继来设置无线发送等待超时时间
+  83   1              //
+  84   1              Pca_Start(NRF905_SendBuffer, 0);
+  85   1      }
+  86          
+  87          
+  88          
+  89          void RepeaterTest_SendDataToPC(uint8_t *Data)
+  90          {
+  91   1          uint8_t tmpCommandSerialNo  = Data[3];
+  92   1          
+  93   1          uint8_t tmpRepeaterNo       = Data[9];
+  94   1          
+  95   1          uint8_t tmpTestPacketNoL    = Data[11];
+  96   1          
+  97   1          uint8_t tmpTestPacketNoH    = Data[12];
+  98   1          
+  99   1          // 中继编号
+ 100   1          //
+ 101   1          SocketData_SendBuffer[0] = tmpRepeaterNo;
+ 102   1          
+ 103   1          // 测试包序号
+ 104   1          //
+ 105   1          SocketData_SendBuffer[1] = tmpTestPacketNoL;
+ 106   1          SocketData_SendBuffer[2] = tmpTestPacketNoH;
+ 107   1          
+ 108   1          // 发送中继器测试包给PC
+ 109   1          //
+ 110   1          PC_SendCommand(0x68, tmpCommandSerialNo, SocketData_SendBuffer, 3);
+ 111   1      }
+ 112          
+C51 COMPILER V9.54   COMMAND_REPEATERTEST                                                  01/18/2017 12:57:29 PAGE 3   
+
+ 113          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    352    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----       8
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

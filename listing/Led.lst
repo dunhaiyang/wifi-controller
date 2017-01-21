@@ -1,0 +1,136 @@
+C51 COMPILER V9.54   LED                                                                   01/18/2017 12:11:29 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE LED
+OBJECT MODULE PLACED IN ..\output\Led.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\KQA_OS\Led.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(.\HeadFil
+                    -e\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Command_Conter;.\HeadFile\App\Command_DataS
+                    -tructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile\App\Command_WhiteList;.\HeadFile\App\C
+                    -ommand_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareMenu;.\HeadFile\MiddlewareTask;.\HeadFile\MiddlewareWi
+                    -reless;.\HeadFile\MiddlewareSocket;.\HeadFile\MiddlewareWesocket) DEBUG OBJECTEXTEND PRINT(..\listing\Led.lst) OBJECT(..
+                    -\output\Led.obj)
+
+line level    source
+
+   1          #include "Led.h"
+   2          
+   3          
+   4          static Led *Led_self;
+   5          
+   6          
+   7          void Led_SetTime(uint8_t whichLed, uint16_t t)
+   8          {
+   9   1              static uint8_t  tmpWhichLed;                                            
+  10   1              
+  11   1              static uint16_t tmpT;                                                           
+  12   1              
+  13   1              static uint8_t  index;
+  14   1              
+  15   1              static uint8_t  whichLedFlag;
+  16   1              
+  17   1              tmpWhichLed = whichLed;                                                         // 间接调用，需要保存局部变量
+  18   1              
+  19   1              tmpT = t;                                                                                       // 间接调用，需要保存局部变量
+  20   1              
+  21   1              for (index = 0; index < LED_MAX; index++)
+  22   1              {
+  23   2                      whichLedFlag = tmpWhichLed & (0x01 << index);
+  24   2                      
+  25   2                      if (whichLedFlag)
+  26   2                      {
+  27   3                              Led_self->ledStatus[index].baseTime = HAL_SYSTEMTIME();
+  28   3                      
+  29   3                              Led_self->ledStatus[index].ledTime = tmpT;
+  30   3                              
+  31   3                              Led_self->action(whichLedFlag, LED_ON);
+  32   3                      }
+  33   2              }
+  34   1      }
+  35          
+  36          
+  37          void Led_Run(void)
+  38          {
+  39   1              static uint8_t  index;
+  40   1              
+  41   1              static uint32_t nowTime;
+  42   1              
+  43   1              for (index = 0; index < LED_MAX; index++)
+  44   1              {
+  45   2                      nowTime = HAL_SYSTEMTIME();
+  46   2                      
+  47   2                      if (Led_self->ledStatus[index].ledTime &&
+  48   2                              HAL_DIFFERENT4_TIME(nowTime, Led_self->ledStatus[index].baseTime) > Led_self->ledStatus[index].ledTime)
+  49   2                      {
+  50   3                              Led_self->ledStatus[index].ledTime = 0;
+C51 COMPILER V9.54   LED                                                                   01/18/2017 12:11:29 PAGE 2   
+
+  51   3                              
+  52   3                              Led_self->action(0x01 << index, LED_OFF);
+  53   3                      }
+  54   2              }
+  55   1      }
+  56          
+  57          
+  58          void Led_Action(uint8_t whichLed, uint8_t whatAction)
+  59          {
+  60   1              switch (whichLed)
+  61   1              {
+  62   2                      case GREEN_LED:
+  63   2                              HAL_LED_GREEN(whatAction);
+  64   2                              break;
+  65   2                      
+  66   2                      case BLUE_LED:
+  67   2                              HAL_LED_BLUE(whatAction);
+  68   2                              break;
+  69   2                      
+  70   2                      case YELLOW_LED:
+  71   2                              HAL_LED_YELLOW(whatAction);
+  72   2                              break;
+  73   2                      
+  74   2                      case ALL_LED:
+  75   2                              HAL_LED_GREEN(whatAction);
+  76   2                              HAL_LED_BLUE(whatAction);
+  77   2                              HAL_LED_YELLOW(whatAction);
+  78   2                              break;
+  79   2                      
+  80   2                      default:
+  81   2                              break;
+  82   2              }
+  83   1      }
+  84          
+  85          
+  86          void Led_Init(void *self)
+  87          {
+  88   1              Led_self = self;
+  89   1              
+  90   1              Led_self->init = Led_Init;
+  91   1              
+  92   1              Led_self->run = Led_Run;
+  93   1              
+  94   1              Led_self->setTime = Led_SetTime;
+  95   1              
+  96   1              Led_self->action = Led_Action;
+  97   1      }
+  98          
+  99          
+ 100          
+ 101          
+ 102          
+ 103          
+ 104          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    721    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     13       1
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+C51 COMPILER V9.54   LED                                                                   01/18/2017 12:11:29 PAGE 3   
+
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

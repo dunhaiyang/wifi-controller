@@ -1,0 +1,173 @@
+C51 COMPILER V9.54   COMMAND_TEMPORARY                                                     01/20/2017 14:38:16 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE COMMAND_TEMPORARY
+OBJECT MODULE PLACED IN ..\output\Command_Temporary.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\App\Command_DataStructure\Command_Temporary.c LARGE OPTIMIZE
+                    -(8,SPEED) BROWSE INCDIR(.\HeadFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Command_Co
+                    -nter;.\HeadFile\App\Command_DataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile\App\C
+                    -ommand_WhiteList;.\HeadFile\App\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareMenu;.\HeadFile\Middl
+                    -ewareTask;.\HeadFile\MiddlewareWireless;.\HeadFile\MiddlewareSocket;.\HeadFile\MiddlewareWesocket) DEBUG OBJECTEXTEND PR
+                    -INT(..\listing\Command_Temporary.lst) OBJECT(..\output\Command_Temporary.obj)
+
+line level    source
+
+   1          #include "Command_Temporary.h"
+   2          
+   3          
+   4          
+   5          // 控制器的状态
+   6          //
+   7          WiresslessChannel_Status_Typedef WiresslessChannel_Status = WirelessChannel_Free;
+   8          
+   9          
+  10          // 指令发送超时
+  11          //
+  12          uint8_t Timeout = 0;
+  13          
+  14          
+  15          // 用来递减超时
+  16          //
+  17          uint8_t TimeoutCounter = 0;
+  18          
+  19          
+  20          // 指令重发次数
+  21          //
+  22          uint8_t ResendTimes = 0;
+  23          
+  24          
+  25          // 计算和校验值
+  26          //
+  27          uint16_t Temporary_CalcSumParity(uint8_t *str, uint8_t len)
+  28          {
+  29   1          uint8_t   i;
+  30   1          uint16_t  parity = 0;
+  31   1          
+  32   1          for (i = 0; i < len; i++)
+  33   1          {
+  34   2              parity += str[i];
+  35   2          }
+  36   1          return parity;
+  37   1      }
+  38          
+  39          
+  40          // 开启PCA，给无线发送计时
+  41          // timeout:, resendTimes:, permitPool:
+  42          //
+  43          void Pca_SubStart(uint16_t timeout, uint8_t resendTimes)
+  44          {
+  45   1              CR = 0;
+  46   1          
+  47   1          WiresslessChannel_Status = WirelessChannel_Busy;
+  48   1          
+  49   1          Timeout = timeout? timeout:1;
+  50   1          
+C51 COMPILER V9.54   COMMAND_TEMPORARY                                                     01/20/2017 14:38:16 PAGE 2   
+
+  51   1          TimeoutCounter = Timeout;
+  52   1          
+  53   1          ResendTimes = resendTimes;
+  54   1          
+  55   1          CR = 1;
+  56   1      }
+  57          
+  58          
+  59          void Pca_Start(uint8_t *str, uint8_t resendTimes)
+  60          {
+  61   1              uint8_t baseTime = 0;
+  62   1              
+  63   1              // 如果是轮询指令，基准时间是1ms
+  64   1              //
+  65   1              if (str[Enum_Wirelss_CommandNo] == 0x01)
+  66   1              {
+  67   2                      baseTime = 30;
+  68   2              }
+  69   1              // 如果是其他设备和中继指令，基准时间是20*5 = 100ms
+  70   1              //
+  71   1              else
+  72   1              {
+  73   2                      baseTime = 50;
+  74   2              }
+  75   1              
+  76   1              // 如果有中继的话，根据中继的数量来设置无线指令应答等待时间
+  77   1              //
+  78   1              if (str[Enum_Wirelss_Repeater1] != 0)
+  79   1              {
+  80   2                      if (str[Enum_Wirelss_Repeater2] != 0)
+  81   2                      {
+  82   3                              if (str[Enum_Wirelss_Repeater3] != 0)
+  83   3                              {
+  84   4                                      // 有中继1， 2， 3
+  85   4                                      //
+  86   4                                      Pca_SubStart(baseTime + 60, resendTimes); 
+  87   4                              }
+  88   3                              // 中继1， 2
+  89   3                              else
+  90   3                              {
+  91   4                                      Pca_SubStart(baseTime + 40, resendTimes); 
+  92   4                              }
+  93   3                      }
+  94   2                      // 有中继1
+  95   2                      //
+  96   2                      else
+  97   2                      {
+  98   3                              Pca_SubStart(baseTime + 20, resendTimes); 
+  99   3                      }
+ 100   2              }
+ 101   1              // 没有中继
+ 102   1              //
+ 103   1              else 
+ 104   1              {
+ 105   2                      Pca_SubStart(baseTime, resendTimes); 
+ 106   2              }
+ 107   1      }
+ 108          
+ 109          
+ 110          // 停止PCA
+ 111          //
+ 112          void Pca_Stop(void)
+C51 COMPILER V9.54   COMMAND_TEMPORARY                                                     01/20/2017 14:38:16 PAGE 3   
+
+ 113          {
+ 114   1          CR = 0;
+ 115   1              
+ 116   1              ResendTimes = 0;
+ 117   1          
+ 118   1          WiresslessChannel_Status = WirelessChannel_Free;
+ 119   1      }
+ 120          
+ 121          
+ 122          // 每5ms中断一次, 实现超时重新开启扫描
+ 123          //
+ 124          void Pca_Interrupt() interrupt 7
+ 125          {
+ 126   1          CCF0 = 0;                       // Clear interrupt flag
+ 127   1          
+ 128   1          CCAP0L = PCA_Value;             // Update compare value
+ 129   1          CCAP0H = PCA_Value >> 8;
+ 130   1          
+ 131   1          PCA_Value += T1000Hz;
+ 132   1          
+ 133   1          while (--TimeoutCounter == 0)
+ 134   1          {
+ 135   2              CR = 0;
+ 136   2                      
+ 137   2                      Pca_Stop(); 
+ 138   2          }
+ 139   1      }
+ 140          
+ 141          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    254    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =      4       6
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

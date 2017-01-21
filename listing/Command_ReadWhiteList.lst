@@ -1,0 +1,161 @@
+C51 COMPILER V9.54   COMMAND_READWHITELIST                                                 01/18/2017 12:57:30 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE COMMAND_READWHITELIST
+OBJECT MODULE PLACED IN ..\output\Command_ReadWhiteList.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\App\Command_Device\Command_ReadWhiteList.c LARGE OPTIMIZE(8,
+                    -SPEED) BROWSE INCDIR(.\HeadFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Command_Conte
+                    -r;.\HeadFile\App\Command_DataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile\App\Comm
+                    -and_WhiteList;.\HeadFile\App\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareMenu;.\HeadFile\Middlewa
+                    -reTask;.\HeadFile\MiddlewareWireless;.\HeadFile\MiddlewareSocket;.\HeadFile\MiddlewareWesocket) DEBUG OBJECTEXTEND PRINT
+                    -(..\listing\Command_ReadWhiteList.lst) OBJECT(..\output\Command_ReadWhiteList.obj)
+
+line level    source
+
+   1          #include "Command_ReadWhiteList.h"
+   2          
+   3          
+   4          uint8_t ReadWhiteList_DeviceType = 0xFF;
+   5          
+   6          
+   7          void ReadWhiteList_DealData(uint8_t *Data)
+   8          {
+   9   1          
+  10   1          uint8_t tmpCommandNo        = Data[0];
+  11   1          
+  12   1          uint8_t tmpCommandSerialNo  = Data[1];
+  13   1          
+  14   1          uint8_t tmpDeviceNoL        = Data[3];
+  15   1          
+  16   1          uint8_t tmpDeviceNoH        = Data[4];
+  17   1          
+  18   1          uint8_t tmpDeviceType       = Data[5];
+  19   1          
+  20   1          uint8_t tmpRepeater1        = Data[6];
+  21   1          
+  22   1          uint8_t tmpRepeater2        = Data[7];
+  23   1          
+  24   1          uint8_t tmpRepeater3        = Data[8];
+  25   1          
+  26   1          uint16_t tmpParityValue       = 0;
+  27   1          
+  28   1              // 保存设备类型，在应答包中使用
+  29   1          //
+  30   1          ReadWhiteList_DeviceType = tmpDeviceType;
+  31   1          
+  32   1          // 设备编号
+  33   1          //
+  34   1          NRF905_SendBuffer[0] = tmpDeviceNoL;
+  35   1          NRF905_SendBuffer[1] = tmpDeviceNoH;
+  36   1          
+  37   1          // 命令编号
+  38   1          //
+  39   1          NRF905_SendBuffer[2] = tmpCommandNo;
+  40   1          
+  41   1          // 命令流水号
+  42   1          //
+  43   1          NRF905_SendBuffer[3] = tmpCommandSerialNo;
+  44   1          
+  45   1          // 目的中继
+  46   1          //
+  47   1          NRF905_SendBuffer[4] = tmpRepeater1;
+  48   1          
+  49   1          // 中继1
+  50   1          //
+C51 COMPILER V9.54   COMMAND_READWHITELIST                                                 01/18/2017 12:57:30 PAGE 2   
+
+  51   1          NRF905_SendBuffer[5] = tmpRepeater1;
+  52   1          
+  53   1          // 中继2
+  54   1          //
+  55   1          NRF905_SendBuffer[6] = tmpRepeater2;
+  56   1          
+  57   1          // 中继3
+  58   1          //
+  59   1          NRF905_SendBuffer[7] = tmpRepeater3;
+  60   1          
+  61   1          // 数据（22字节）
+  62   1          //
+  63   1          NRF905_SendBuffer[8] = 0xE9;
+  64   1          NRF905_SendBuffer[9] = tmpDeviceNoL;
+  65   1              NRF905_SendBuffer[10] = tmpDeviceNoH;
+  66   1              NRF905_SendBuffer[11] = tmpDeviceType;
+  67   1              NRF905_SendBuffer[12] = App_Hal_Api.wireless->channelNo;
+  68   1          memcpy(NRF905_SendBuffer + 13, Data + 9, 5);
+  69   1          
+  70   1          // 内部和校验
+  71   1          //
+  72   1          tmpParityValue = Temporary_CalcSumParity(NRF905_SendBuffer + 8, 10);
+  73   1          NRF905_SendBuffer[18] = tmpParityValue;
+  74   1          NRF905_SendBuffer[19] = tmpParityValue >> 8;
+  75   1          
+  76   1          // 填充字符0xA3
+  77   1          //
+  78   1          memset(NRF905_SendBuffer + 20, 0xE9, 10);
+  79   1          
+  80   1          // 外部和校验
+  81   1          //
+  82   1          tmpParityValue = Temporary_CalcSumParity(NRF905_SendBuffer, 30);
+  83   1          NRF905_SendBuffer[30] = tmpParityValue;
+  84   1          NRF905_SendBuffer[31] = tmpParityValue >> 8;
+  85   1          
+  86   1          // 发送数据到无线设备
+  87   1          //
+  88   1              App_Hal_Api.wireless->write(NRF905_SendBuffer);
+  89   1              
+  90   1              // 根据中继来设置无线发送等待超时时间
+  91   1              //
+  92   1              Pca_Start(NRF905_SendBuffer, 0);
+  93   1      }
+  94          
+  95          
+  96          void ReadWhiteList_SendDataToPC(uint8_t *Data)
+  97          {
+  98   1          uint8_t tmpCommandNo        = Data[2];
+  99   1          
+ 100   1          uint8_t tmpCommandSerialNo  = Data[3];
+ 101   1          
+ 102   1          uint8_t tmpRepeaterNo       = Data[9];
+ 103   1          
+ 104   1          uint8_t tmpTestPacketNoL    = Data[0];
+ 105   1          
+ 106   1          uint8_t tmpTestPacketNoH    = Data[1];
+ 107   1              
+ 108   1              uint8_t tmpWhiteListLen     = Data[10];
+ 109   1          
+ 110   1          // 设备编号
+ 111   1          //
+ 112   1          SocketData_SendBuffer[0] = tmpTestPacketNoL;
+C51 COMPILER V9.54   COMMAND_READWHITELIST                                                 01/18/2017 12:57:30 PAGE 3   
+
+ 113   1          SocketData_SendBuffer[1] = tmpTestPacketNoH;
+ 114   1          
+ 115   1          // 设备类型
+ 116   1          //
+ 117   1          SocketData_SendBuffer[2] = ReadWhiteList_DeviceType;
+ 118   1          
+ 119   1          memcpy(SocketData_SendBuffer + 3, Data + 9, 5 + tmpWhiteListLen);
+ 120   1          
+ 121   1          // 发送中继器测试包给PC
+ 122   1          //
+ 123   1          PC_SendCommand(0x18, DeviceDataSerialNo++, SocketData_SendBuffer, 8 + tmpWhiteListLen);
+ 124   1      }
+ 125          
+ 126          
+ 127          
+ 128          
+ 129          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    454    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =      1      13
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

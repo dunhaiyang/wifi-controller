@@ -1,0 +1,154 @@
+C51 COMPILER V9.54   COMMAND_RESTOREDATASTRUCTURE                                          01/18/2017 12:57:30 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE COMMAND_RESTOREDATASTRUCTURE
+OBJECT MODULE PLACED IN ..\output\Command_RestoreDataStructure.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\App\Command_Device\Command_RestoreDataStructure.c LARGE OPTI
+                    -MIZE(8,SPEED) BROWSE INCDIR(.\HeadFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Comman
+                    -d_Conter;.\HeadFile\App\Command_DataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile\A
+                    -pp\Command_WhiteList;.\HeadFile\App\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareMenu;.\HeadFile\M
+                    -iddlewareTask;.\HeadFile\MiddlewareWireless;.\HeadFile\MiddlewareSocket;.\HeadFile\MiddlewareWesocket) DEBUG OBJECTEXTEN
+                    -D PRINT(..\listing\Command_RestoreDataStructure.lst) OBJECT(..\output\Command_RestoreDataStructure.obj)
+
+line level    source
+
+   1          #include "Command_RestoreDataStructure.h"
+   2          
+   3          
+   4          uint8_t RestoreDataStructure_DeviceType = 0xFF;
+   5          
+   6          
+   7          void RestoreDataStructure_DealData(uint8_t *Data)
+   8          {
+   9   1          uint8_t tmpCommandNo        = Data[0];
+  10   1          
+  11   1          uint8_t tmpCommandSerialNo  = Data[1];
+  12   1          
+  13   1          uint8_t tmpDeviceNoL        = Data[3];
+  14   1          
+  15   1          uint8_t tmpDeviceNoH        = Data[4];
+  16   1          
+  17   1          uint8_t tmpDeviceType       = Data[5];
+  18   1          
+  19   1          uint8_t tmpRepeater1        = Data[6];
+  20   1          
+  21   1          uint8_t tmpRepeater2        = Data[7];
+  22   1          
+  23   1          uint8_t tmpRepeater3        = Data[8];
+  24   1          
+  25   1          uint16_t tmpParityValue       = 0;
+  26   1          
+  27   1          // 保存设备类型，在应答包中使用
+  28   1          //
+  29   1          RestoreDataStructure_DeviceType = tmpDeviceType;
+  30   1          
+  31   1          // 设备编号
+  32   1          //
+  33   1          NRF905_SendBuffer[0] = tmpDeviceNoL;
+  34   1          NRF905_SendBuffer[1] = tmpDeviceNoH;
+  35   1          
+  36   1          // 命令编号
+  37   1          //
+  38   1          NRF905_SendBuffer[2] = tmpCommandNo;
+  39   1          
+  40   1          // 命令流水号
+  41   1          //
+  42   1          NRF905_SendBuffer[3] = tmpCommandSerialNo;
+  43   1          
+  44   1          // 目的中继
+  45   1          //
+  46   1          NRF905_SendBuffer[4] = tmpRepeater1;
+  47   1          
+  48   1          // 中继1
+  49   1          //
+  50   1          NRF905_SendBuffer[5] = tmpRepeater1;
+C51 COMPILER V9.54   COMMAND_RESTOREDATASTRUCTURE                                          01/18/2017 12:57:30 PAGE 2   
+
+  51   1          
+  52   1          // 中继2
+  53   1          //
+  54   1          NRF905_SendBuffer[6] = tmpRepeater2;
+  55   1          
+  56   1          // 中继3
+  57   1          //
+  58   1          NRF905_SendBuffer[7] = tmpRepeater3;
+  59   1          
+  60   1          // 数据
+  61   1          //
+  62   1          NRF905_SendBuffer[8] = 0xF8;
+  63   1          
+  64   1          NRF905_SendBuffer[9] = tmpDeviceNoL;
+  65   1          
+  66   1          NRF905_SendBuffer[10] = tmpDeviceNoH;
+  67   1          
+  68   1          NRF905_SendBuffer[11] = tmpDeviceType;
+  69   1          
+  70   1          NRF905_SendBuffer[12] = App_Hal_Api.wireless->channelNo;
+  71   1          
+  72   1          memcpy(NRF905_SendBuffer + 13, Data + 9, 14);
+  73   1          
+  74   1           // 内部和校验
+  75   1          //
+  76   1          tmpParityValue = Temporary_CalcSumParity(NRF905_SendBuffer + 8, 19);
+  77   1          NRF905_SendBuffer[27] = tmpParityValue;
+  78   1          NRF905_SendBuffer[28] = tmpParityValue >> 8;
+  79   1          NRF905_SendBuffer[29] = 0xF8;
+  80   1          
+  81   1          // 外部和校验
+  82   1          //
+  83   1          tmpParityValue = Temporary_CalcSumParity(NRF905_SendBuffer, 30);
+  84   1          NRF905_SendBuffer[30] = tmpParityValue;
+  85   1          NRF905_SendBuffer[31] = tmpParityValue >> 8;
+  86   1          
+  87   1          // 发送数据到无线设备
+  88   1          //
+  89   1              App_Hal_Api.wireless->write(NRF905_SendBuffer);
+  90   1              
+  91   1              // 根据中继来设置无线发送等待超时时间
+  92   1              //
+  93   1              Pca_Start(NRF905_SendBuffer, 0);
+  94   1      }
+  95          
+  96          
+  97          void RestoreDataStructure_SendDataToPC(uint8_t *Data)
+  98          {
+  99   1          uint8_t tmpDeviceNoL        = Data[0];
+ 100   1          
+ 101   1          uint8_t tmpDeviceNoH        = Data[1];
+ 102   1          
+ 103   1          uint8_t tmpCommandSerialNo  = Data[3];
+ 104   1          
+ 105   1          
+ 106   1          // 设备编号
+ 107   1          //
+ 108   1          SocketData_SendBuffer[0] = tmpDeviceNoL;
+ 109   1          SocketData_SendBuffer[1] = tmpDeviceNoH;
+ 110   1          
+ 111   1          // 命令编号
+ 112   1          //
+C51 COMPILER V9.54   COMMAND_RESTOREDATASTRUCTURE                                          01/18/2017 12:57:30 PAGE 3   
+
+ 113   1          SocketData_SendBuffer[2] = RestoreDataStructure_DeviceType;
+ 114   1          
+ 115   1          memcpy(SocketData_SendBuffer + 3, Data + 13, 15);
+ 116   1          
+ 117   1          // 发送中继器测试包给PC
+ 118   1          //
+ 119   1          PC_SendCommand(0x0A, tmpCommandSerialNo, SocketData_SendBuffer, 18);
+ 120   1      }
+ 121          
+ 122          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    403    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =      1      10
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

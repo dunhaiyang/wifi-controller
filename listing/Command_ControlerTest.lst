@@ -1,0 +1,47 @@
+C51 COMPILER V9.54   COMMAND_CONTROLERTEST                                                 01/18/2017 12:57:28 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE COMMAND_CONTROLERTEST
+OBJECT MODULE PLACED IN ..\output\Command_ControlerTest.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\App\Command_Conter\Command_ControlerTest.c LARGE OPTIMIZE(8,
+                    -SPEED) BROWSE INCDIR(.\HeadFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Command_Conte
+                    -r;.\HeadFile\App\Command_DataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile\App\Comm
+                    -and_WhiteList;.\HeadFile\App\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareMenu;.\HeadFile\Middlewa
+                    -reTask;.\HeadFile\MiddlewareWireless;.\HeadFile\MiddlewareSocket;.\HeadFile\MiddlewareWesocket) DEBUG OBJECTEXTEND PRINT
+                    -(..\listing\Command_ControlerTest.lst) OBJECT(..\output\Command_ControlerTest.obj)
+
+line level    source
+
+   1          #include "Command_ControlerTest.h"
+   2          
+   3          
+   4          
+   5          // 控制器通讯测试命令应答, Data是PC发送的测试数据包
+   6          //
+   7          void ControlerTest_SendDataToPC(uint8_t *Data)
+   8          {
+   9   1          uint8_t tmpSerialNo = Data[1];
+  10   1          
+  11   1          // 准备应答包数据
+  12   1          //
+  13   1          SocketData_SendBuffer[0] = Data[Enum_CommandContent + 0];
+  14   1          SocketData_SendBuffer[1] = Data[Enum_CommandContent + 1];
+  15   1          
+  16   1          // 发送控制器测试命令给PC
+  17   1          //
+  18   1          PC_SendCommand(0x66, tmpSerialNo, SocketData_SendBuffer, 2);
+  19   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     46    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

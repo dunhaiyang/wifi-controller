@@ -1,0 +1,507 @@
+C51 COMPILER V9.54   NETWORK                                                               01/18/2017 12:11:30 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE NETWORK
+OBJECT MODULE PLACED IN ..\output\Network.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\KQA_OS\Network.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(.\Hea
+                    -dFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Command_Conter;.\HeadFile\App\Command_D
+                    -ataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile\App\Command_WhiteList;.\HeadFile\A
+                    -pp\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareMenu;.\HeadFile\MiddlewareTask;.\HeadFile\Middlewa
+                    -reWireless;.\HeadFile\MiddlewareSocket;.\HeadFile\MiddlewareWesocket) DEBUG OBJECTEXTEND PRINT(..\listing\Network.lst) O
+                    -BJECT(..\output\Network.obj)
+
+line level    source
+
+   1          #include "Network.h"
+   2          
+   3          
+   4          static  Network *Network_self;
+   5          
+   6          
+   7          //NetworkParameter Network_Parameter = {
+   8          //      
+   9          //      {192, 168, 1, 120},                                                                             // 本地地址
+  10          //      
+  11          //      {192, 168, 1, 1},                                                                               // 默认网关
+  12          //      
+  13          //      {255, 255, 255, 0},                                                                             // 掩码
+  14          //      
+  15          //      {0, 0, 0, 0, 0, 0},                                                                             // MAC地址(这个将会被读取出来真实的mac地址所取代)
+  16          //      
+  17          //};
+  18          
+  19          
+  20          //NetworkSocket Network_Socket0 = {
+  21          //      
+  22          //      4001,                                                                                                   // 本地端口
+  23          //              
+  24          //      4001,                                                                                                   // 远程端口
+  25          //      
+  26          //      {192, 168, 1, 105},                                                                             // 远程ip
+  27          //      
+  28          //};
+  29          
+  30          
+  31          NetworkParameter Network_Parameter = {
+  32                  
+  33                  {192, 168, 1, 150},                                                                             // 本地地址
+  34                  
+  35                  {192, 168, 1, 1},                                                                               // 默认网关
+  36                  
+  37                  {255, 255, 255, 0},                                                                             // 掩码
+  38                  
+  39                  {0, 0, 0, 0, 0, 0},                                                                             // MAC地址(这个将会被读取出来真实的mac地址所取代)
+  40                  
+  41          };
+  42          
+  43          
+  44          NetworkSocket Network_Socket0 = {
+  45                  
+  46                  4001,                                                                                                   // 本地端口
+  47                          
+  48                  4001,                                                                                                   // 远程端口
+  49                  
+  50                  {192, 168, 1, 102},                                                                             // 远程ip
+C51 COMPILER V9.54   NETWORK                                                               01/18/2017 12:11:30 PAGE 2   
+
+  51                  
+  52          };
+  53          
+  54          
+  55          NetworkBoardcastData            Network_BoardcastData = {
+  56                  
+  57                  0,                                                                                                              // 初始化没有接收到数据
+  58                  
+  59          };
+  60          
+  61          
+  62          NetworkSocketData                       Network_SocketData = {
+  63                  
+  64                  0,                                                                                                              // 初始化没有接收到数据
+  65          };
+  66          
+  67          
+  68          
+  69          void __SubBoardcastRead(void)
+  70          {
+  71   1              uint8_t         i;
+  72   1              
+  73   1              uint8_t         tmp_ReceiveCount = 0;
+  74   1              
+  75   1              uint8_t         have0x02 = 0;
+  76   1              
+  77   1              uint8_t         have0x10 = 0;
+  78   1              
+  79   1              if (!BoardcastData_ReceiveOk)
+  80   1              {
+  81   2                      // ======================== 获取数据长度 =========================
+  82   2                      //
+  83   2                      BoardcastData_ReceiveBufferCount = CH395GetRecvLength(1);
+  84   2                      
+  85   2                      
+  86   2                      // ======================== 读取和解析数据 =========================
+  87   2                      //
+  88   2                      if (BoardcastData_ReceiveBufferCount > 0)
+  89   2                      {       
+  90   3                              CH395GetRecvData(1, BoardcastData_ReceiveBufferCount, __BoardcastData_ReceiveBuffer);
+  91   3                              
+  92   3                              // 去掉多余的字节(协议的帧头0x02, 转义字符0x10, 帧尾0x03)
+  93   3                              //
+  94   3                              for (i = 0; i < BoardcastData_ReceiveBufferCount; i++)
+  95   3                              {
+  96   4                                      // 如果还没接收到0x02的头字节
+  97   4                                      //
+  98   4                                      if (!have0x02)
+  99   4                                      {
+ 100   5                                              if (__BoardcastData_ReceiveBuffer[i] == 0x02)
+ 101   5                                              {
+ 102   6                                                      have0x02 = 1;
+ 103   6                                              }
+ 104   5                                              continue;
+ 105   5                                      }
+ 106   4                                      
+ 107   4                                      // 如果还没接收到0x10的转义字符
+ 108   4                                      //
+ 109   4                                      if (!have0x10)
+ 110   4                                      {
+ 111   5                                              if (__BoardcastData_ReceiveBuffer[i] == 0x10)
+ 112   5                                              {
+C51 COMPILER V9.54   NETWORK                                                               01/18/2017 12:11:30 PAGE 3   
+
+ 113   6                                                      have0x10 = 1;
+ 114   6                                                      
+ 115   6                                                      continue;
+ 116   6                                              }
+ 117   5                                              
+ 118   5                                              // 如果接收到0x03的尾字节
+ 119   5                                              //
+ 120   5                                              if (__BoardcastData_ReceiveBuffer[i] == 0x03)
+ 121   5                                              {
+ 122   6                                                      if (!(BoardcastData_ReceiveBuffer[0] == 0x61 || BoardcastData_ReceiveBuffer[0] == 0x63))
+ 123   6                                                      {
+ 124   7                                                              return;
+ 125   7                                                      }
+ 126   6                                                      if (BoardcastData_ReceiveBuffer[0] == 0x63 && memcmp(BoardcastData_ReceiveBuffer + 3, NETPARA_MAC, 6
+             -) != 0)
+ 127   6                                                      {
+ 128   7                                                              return;
+ 129   7                                                      }
+ 130   6                                                      BoardcastData_ReceiveOk = 1;
+ 131   6                                                      
+ 132   6                                                      BoardcastData_ReceiveBufferCount = tmp_ReceiveCount;
+ 133   6                                                      
+ 134   6                                                      return;
+ 135   6                                              }
+ 136   5                                      }
+ 137   4                                      else
+ 138   4                                      {
+ 139   5                                              have0x10 = 0;
+ 140   5                                      }
+ 141   4                                      BoardcastData_ReceiveBuffer[tmp_ReceiveCount++] = __BoardcastData_ReceiveBuffer[i];
+ 142   4                              }
+ 143   3                      }
+ 144   2              }
+ 145   1      }
+ 146          
+ 147          
+ 148          void __SubSocketRead(void)
+ 149          {
+ 150   1              uint8_t         i;
+ 151   1              
+ 152   1              uint8_t         tmp_ReceiveCount = 0;
+ 153   1              
+ 154   1              uint8_t         have0x02 = 0;
+ 155   1              
+ 156   1              uint8_t         have0x10 = 0;
+ 157   1              
+ 158   1              if (!SocketData_ReceiveOk)
+ 159   1              {
+ 160   2                      // ======================== 读获取数据长度 =========================
+ 161   2                      //
+ 162   2                      SocketData_ReceiveBufferCount = CH395GetRecvLength(0);
+ 163   2                      
+ 164   2                      
+ 165   2                      // ======================== 读取和解析数据 =========================
+ 166   2                      //
+ 167   2                      if (SocketData_ReceiveBufferCount > 0)
+ 168   2                      {       
+ 169   3                              CH395GetRecvData(0, SocketData_ReceiveBufferCount, __SocketData_ReceiveBuffer);
+ 170   3                              
+ 171   3                              // 去掉多余的字节(协议的帧头0x02, 转义字符0x10, 帧尾0x03)
+ 172   3                              //
+ 173   3                              for (i = 0; i < SocketData_ReceiveBufferCount; i++)
+C51 COMPILER V9.54   NETWORK                                                               01/18/2017 12:11:30 PAGE 4   
+
+ 174   3                              {
+ 175   4                                      // 如果还没接收到0x02的头字节
+ 176   4                                      //
+ 177   4                                      if (!have0x02)
+ 178   4                                      {
+ 179   5                                              if (__SocketData_ReceiveBuffer[i] == 0x02)
+ 180   5                                              {
+ 181   6                                                      have0x02 = 1;
+ 182   6                                              }
+ 183   5                                              continue;
+ 184   5                                      }
+ 185   4                                      
+ 186   4                                      // 如果还没接收到0x10的转义字符
+ 187   4                                      //
+ 188   4                                      if (!have0x10)
+ 189   4                                      {
+ 190   5                                              if (__SocketData_ReceiveBuffer[i] == 0x10)
+ 191   5                                              {
+ 192   6                                                      have0x10 = 1;
+ 193   6                                                      
+ 194   6                                                      continue;
+ 195   6                                              }
+ 196   5                                              
+ 197   5                                              // 如果接收到0x03的尾字节
+ 198   5                                              //
+ 199   5                                              if (__SocketData_ReceiveBuffer[i] == 0x03)
+ 200   5                                              {
+ 201   6                                                      SocketData_ReceiveOk = 1;
+ 202   6                                                      
+ 203   6                                                      SocketData_ReceiveBufferCount = tmp_ReceiveCount;
+ 204   6                                                      
+ 205   6                                                      return;
+ 206   6                                              }
+ 207   5                                      }
+ 208   4                                      else
+ 209   4                                      {
+ 210   5                                              have0x10 = 0;
+ 211   5                                      }
+ 212   4                                      SocketData_ReceiveBuffer[tmp_ReceiveCount++] = __SocketData_ReceiveBuffer[i];
+ 213   4                              }
+ 214   3                      }
+ 215   2              }
+ 216   1      }
+ 217          
+ 218          
+ 219          void Network_ConnectUdp(void)
+ 220          {
+ 221   1              // 设置socket0为UDP类型
+ 222   1              //
+ 223   1              HAL_NETWORK_CH395SETSOCKETTYPE(0, PROTO_TYPE_UDP);
+ 224   1              
+ 225   1              // 设置socket0的源端口
+ 226   1              //
+ 227   1              HAL_NETWORK_CH395SETSOCKETSOURCEPORT(0, SOCKET0_LOCALPORT);
+ 228   1              
+ 229   1              // 设置远程IP
+ 230   1              //
+ 231   1              HAL_NETWORK_CH395SETSOCKETDESIP(0, SOCKET0_REMOTEIP);
+ 232   1              
+ 233   1              // 设置远程PORT
+ 234   1              //
+ 235   1              HAL_NETWORK_CH395SETSOCKETDESPORT(0, SOCKET0_REMOTEPORT);
+C51 COMPILER V9.54   NETWORK                                                               01/18/2017 12:11:30 PAGE 5   
+
+ 236   1              
+ 237   1              // 打开socket
+ 238   1              //
+ 239   1              HAL_NETWORK_CH395SOCKETOPEN(0);
+ 240   1      }
+ 241          
+ 242          
+ 243          void Network_SendUdp(uint8_t *buffer, uint16_t bufferLen)
+ 244          {
+ 245   1              static  int8_t  ret;
+ 246   1              
+ 247   1              // 发送用户数据
+ 248   1              //
+ 249   1              HAL_NETWORK_CH395SENDDATA(0, buffer, bufferLen);
+ 250   1              
+ 251   1              // 等待发送缓冲区为空, 或者发送超时
+ 252   1              //
+ 253   1              do
+ 254   1              {
+ 255   2                      ret = HAL_NETWORK_CH395GETSOCKETINT(0);
+ 256   2                      
+ 257   2              }while ((ret & SINT_STAT_SENBUF_FREE) != 0 || (ret & SINT_STAT_TIM_OUT));
+ 258   1      }
+ 259          
+ 260          
+ 261          uint16_t Network_ReceiveUdp(uint8_t *buffer)
+ 262          {
+ 263   1              uint16_t tmpCount = SocketData_ReceiveBufferCount;
+ 264   1              
+ 265   1              memcpy(buffer, SocketData_ReceiveBuffer, SocketData_ReceiveBufferCount);
+ 266   1              
+ 267   1              SocketData_ReceiveBufferCount = 0; SocketData_ReceiveOk = 0;
+ 268   1              
+ 269   1              return tmpCount;
+ 270   1      }
+ 271          
+ 272          
+ 273          void Network_ConnectBoardcast(void)
+ 274          {
+ 275   1              static uint8_t boardcastIP[4] = {255, 255, 255, 255};
+ 276   1              
+ 277   1              // 设置socket0的类型为UDP
+ 278   1              //
+ 279   1              HAL_NETWORK_CH395SETSOCKETTYPE(1, PROTO_TYPE_UDP);
+ 280   1              
+ 281   1              // 设置socket0的源端口
+ 282   1              //
+ 283   1              HAL_NETWORK_CH395SETSOCKETSOURCEPORT(1, 10087);
+ 284   1              
+ 285   1              // 设置远程IP
+ 286   1              //
+ 287   1              HAL_NETWORK_CH395SETSOCKETDESIP(1, boardcastIP);
+ 288   1              
+ 289   1              // 设置远程PORT
+ 290   1              //
+ 291   1              HAL_NETWORK_CH395SETSOCKETDESPORT(1, 10086);
+ 292   1              
+ 293   1              // 打开socket
+ 294   1              //
+ 295   1              HAL_NETWORK_CH395SOCKETOPEN(1);
+ 296   1      }
+ 297          
+C51 COMPILER V9.54   NETWORK                                                               01/18/2017 12:11:30 PAGE 6   
+
+ 298          
+ 299          void Network_SendBoardcast(uint8_t *buffer, uint16_t bufferLen)
+ 300          {
+ 301   1              static  int8_t  ret;
+ 302   1              
+ 303   1              // 发送用户数据
+ 304   1              //
+ 305   1              HAL_NETWORK_CH395SENDDATA(1, buffer, bufferLen);
+ 306   1              
+ 307   1              // 等待发送缓冲区为空, 或者发送超时
+ 308   1              //
+ 309   1              do
+ 310   1              {
+ 311   2                      ret = HAL_NETWORK_CH395GETSOCKETINT(1);
+ 312   2                      
+ 313   2              }while ((ret & SINT_STAT_SENBUF_FREE) != 0 || (ret & SINT_STAT_TIM_OUT));
+ 314   1      }
+ 315          
+ 316          
+ 317          uint16_t Network_ReceiveBoardcast(uint8_t *buffer)
+ 318          {
+ 319   1              uint16_t tmpCount = BoardcastData_ReceiveBufferCount;
+ 320   1              
+ 321   1              memcpy(buffer, BoardcastData_ReceiveBuffer, BoardcastData_ReceiveBufferCount);
+ 322   1              
+ 323   1              BoardcastData_ReceiveBufferCount = 0; BoardcastData_ReceiveOk = 0;
+ 324   1              
+ 325   1              return tmpCount;
+ 326   1      }
+ 327          
+ 328          
+ 329          void Network_RegisterErrorFunction(void *func)
+ 330          {
+ 331   1              Network_self->error = func;
+ 332   1      }
+ 333          
+ 334          
+ 335          void Network_PeriodTask(void)
+ 336          {
+ 337   1              if (CH395_INT_WIRE == 0)                                                                                                                // 中断脚为低，说明有事情发生
+ 338   1              {
+ 339   2                      Network_self->globalStatus = HAL_NETWORK_CH395GETGLOBALINT_ALL();
+ 340   2                      
+ 341   2                      if (Network_self->globalStatus & 0x20)                                                                          // socket1 中断(socket1 网络广播包)
+ 342   2                      {
+ 343   3                              Network_self->socket1Status = HAL_NETWORK_CH395GETSOCKETINT(1);
+ 344   3                              
+ 345   3                              if (Network_self->socket1Status & 0x04)                                                                 // socket1 有数据可读
+ 346   3                              {
+ 347   4                                      __SubBoardcastRead();
+ 348   4                              }
+ 349   3                      }
+ 350   2                      
+ 351   2                      if(Network_self->globalStatus & 0x10)                                                                   // socket0 中断(socket0 网络数据包)
+ 352   2                      {
+ 353   3                              Network_self->socket0Status = HAL_NETWORK_CH395GETSOCKETINT(0);
+ 354   3                              
+ 355   3                              if (Network_self->socket0Status & 0x04)                                                                 // socket0 有数据可读
+ 356   3                              {
+ 357   4                                      __SubSocketRead();
+ 358   4                              }
+ 359   3                      }
+C51 COMPILER V9.54   NETWORK                                                               01/18/2017 12:11:30 PAGE 7   
+
+ 360   2                      
+ 361   2                      if(!(Network_self->globalStatus & 0x10 || Network_self->globalStatus & 0x20))
+ 362   2                      {
+ 363   3                              if (Network_self->error)
+ 364   3                              {
+ 365   4                                      Network_self->error();
+ 366   4                              }
+ 367   3                      }
+ 368   2              }
+ 369   1      }
+ 370          
+ 371          
+ 372          void Network_AllParameters(void)
+ 373          {
+ 374   1              printf("eth0\t\tLink encap:Ethernet  HWaddr %x:%x:%x:%x:%x:%x\r\n", (uint16_t)(NETPARA_MAC[0]), 
+ 375   1                                                                                                                                                      (uint16_t)(NETPARA_MAC[1]), 
+ 376   1                                                                                                                                                      (uint16_t)(NETPARA_MAC[2]), 
+ 377   1                                                                                                                                                      (uint16_t)(NETPARA_MAC[3]),
+ 378   1                                                                                                                                                      (uint16_t)(NETPARA_MAC[4]), 
+ 379   1                                                                                                                                                      (uint16_t)(NETPARA_MAC[5]));
+ 380   1              
+ 381   1              printf("\t\tLocal IP: %u.%u.%u.%u  Port: %u\r\n",       (uint16_t)(NETPARA_IP[0]), 
+ 382   1                                                                                                                      (uint16_t)(NETPARA_IP[1]), 
+ 383   1                                                                                                                      (uint16_t)(NETPARA_IP[2]), 
+ 384   1                                                                                                                      (uint16_t)(NETPARA_IP[3]),
+ 385   1                                                                                                                      (uint16_t)(SOCKET0_LOCALPORT));
+ 386   1                                                                                                
+ 387   1              printf("\t\tRemote IP: %u.%u.%u.%u  RemotePort: %u\r\n",        (uint16_t)(SOCKET0_REMOTEIP[0]), 
+ 388   1                                                                                                                                      (uint16_t)(SOCKET0_REMOTEIP[1]), 
+ 389   1                                                                                                                                      (uint16_t)(SOCKET0_REMOTEIP[2]), 
+ 390   1                                                                                                                                      (uint16_t)(SOCKET0_REMOTEIP[3]),
+ 391   1                                                                                                                                      (uint16_t)(SOCKET0_REMOTEPORT));
+ 392   1              
+ 393   1              printf("\t\tGateway: %u.%u.%u.%u  Mask: %u.%u.%u.%u\r\n",        (uint16_t)(NETPARA_GATEWAY[0]), 
+ 394   1                                                                                                                                      (uint16_t)(NETPARA_GATEWAY[1]), 
+ 395   1                                                                                                                                      (uint16_t)(NETPARA_GATEWAY[2]), 
+ 396   1                                                                                                                                      (uint16_t)(NETPARA_GATEWAY[3]),
+ 397   1                                                                                                                                      (uint16_t)(NETPARA_MASK[0]), 
+ 398   1                                                                                                                                      (uint16_t)(NETPARA_MASK[1]), 
+ 399   1                                                                                                                                      (uint16_t)(NETPARA_MASK[2]), 
+ 400   1                                                                                                                                      (uint16_t)(NETPARA_MASK[3]));
+ 401   1      }
+ 402          
+ 403          
+ 404          void Network_Reboot(void)
+ 405          {
+ 406   1              // 初始化CH395
+ 407   1              //
+ 408   1              HAL_NETWORK_CH395REBOOT();                                                                              // 复位CH395
+ 409   1              
+ 410   1              HAL_DELAY1MS(100);                                                                                              // CH395的硬件复位通常需要50ms
+ 411   1              
+ 412   1              HAL_NETWORK_CH395SETIPADDR(NETPARA_IP);                                                 // 设置本地IP
+ 413   1              
+ 414   1              HAL_NETWORK_CH395SETGATEWAY(NETPARA_GATEWAY);                                   // 设置本地的网关
+ 415   1              
+ 416   1              HAL_NETWORK_CH395SETMASKADDR(NETPARA_MASK);                                             // 设置本地的掩码
+ 417   1              
+ 418   1              HAL_NETWORK_CH395GETMACADDR(NETPARA_MAC);                                               // 获取本地mac地址
+ 419   1              
+ 420   1              HAL_NETWORK_CH395INIT();                                                                                // 初始化CH395
+ 421   1              
+C51 COMPILER V9.54   NETWORK                                                               01/18/2017 12:11:30 PAGE 8   
+
+ 422   1              Network_self->connectUdp();
+ 423   1              
+ 424   1              Network_self->connectBoardcast();
+ 425   1      }
+ 426          
+ 427          
+ 428          
+ 429          void Network_Init(void *self)
+ 430          {
+ 431   1              Network_self = self;
+ 432   1              
+ 433   1              Network_self->init = Network_Init;
+ 434   1              
+ 435   1              Network_self->error = 0;
+ 436   1              
+ 437   1              //
+ 438   1              Network_self->allParameters = Network_AllParameters;
+ 439   1              
+ 440   1              Network_self->reboot = Network_Reboot;
+ 441   1              
+ 442   1              //
+ 443   1              Network_self->registerErrorFunction = Network_RegisterErrorFunction;
+ 444   1              
+ 445   1              Network_self->run = Network_PeriodTask;
+ 446   1              
+ 447   1              // UDP
+ 448   1              //
+ 449   1              Network_self->connectUdp = Network_ConnectUdp;
+ 450   1              
+ 451   1              Network_self->writeUdp = Network_SendUdp;
+ 452   1              
+ 453   1              Network_self->readUdp = Network_ReceiveUdp;
+ 454   1              
+ 455   1              // 广播
+ 456   1              //
+ 457   1              Network_self->connectBoardcast = Network_ConnectBoardcast;
+ 458   1              
+ 459   1              Network_self->writeBoardcast = Network_SendBoardcast;
+ 460   1              
+ 461   1              Network_self->readBoardcast = Network_ReceiveBoardcast;
+ 462   1      }
+ 463          
+ 464          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1911    ----
+   CONSTANT SIZE    =    177    ----
+   XDATA SIZE       =   1074      17
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

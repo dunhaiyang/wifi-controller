@@ -1,0 +1,168 @@
+C51 COMPILER V9.54   COMMAND_DEVICETEST                                                    01/18/2017 12:57:29 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE COMMAND_DEVICETEST
+OBJECT MODULE PLACED IN ..\output\Command_DeviceTest.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\App\Command_Device\Command_DeviceTest.c LARGE OPTIMIZE(8,SPE
+                    -ED) BROWSE INCDIR(.\HeadFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Command_Conter;.
+                    -\HeadFile\App\Command_DataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile\App\Command
+                    -_WhiteList;.\HeadFile\App\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareMenu;.\HeadFile\MiddlewareT
+                    -ask;.\HeadFile\MiddlewareWireless;.\HeadFile\MiddlewareSocket;.\HeadFile\MiddlewareWesocket) DEBUG OBJECTEXTEND PRINT(..
+                    -\listing\Command_DeviceTest.lst) OBJECT(..\output\Command_DeviceTest.obj)
+
+line level    source
+
+   1          #include "Command_DeviceTest.h"
+   2          
+   3          
+   4          // 转发电脑的设备通讯测试包给设备
+   5          //
+   6          void DeviceTest_DealData(uint8_t *Data)
+   7          {
+   8   1          uint8_t tmpCommandNo        = Data[Enum_CommandNo];
+   9   1          
+  10   1          uint8_t tmpCommandSerialNo  = Data[Enum_CommandSerialNo];
+  11   1          
+  12   1          uint8_t tmpDeviceNoL        = Data[Enum_CommandContent + 0];
+  13   1          
+  14   1          uint8_t tmpDeviceNoH        = Data[Enum_CommandContent + 1];
+  15   1          
+  16   1          uint8_t tmpDeviceType       = Data[Enum_CommandContent + 2];
+  17   1          
+  18   1          uint8_t tmpRepeater1        = Data[Enum_CommandContent + 3];
+  19   1          
+  20   1          uint8_t tmpRepeater2        = Data[Enum_CommandContent + 4];
+  21   1          
+  22   1          uint8_t tmpRepeater3        = Data[Enum_CommandContent + 5];
+  23   1          
+  24   1          uint8_t tmpTestPacketNoL    = Data[Enum_CommandContent + 6];
+  25   1          
+  26   1          uint8_t tmpTestPacketNoH    = Data[Enum_CommandContent + 7];
+  27   1          
+  28   1          uint16_t tmpParityValue       = 0;
+  29   1          
+  30   1          // 设备编号
+  31   1          //
+  32   1          NRF905_SendBuffer[0] = tmpDeviceNoL;
+  33   1          NRF905_SendBuffer[1] = tmpDeviceNoH;
+  34   1          
+  35   1          // 命令编号
+  36   1          //
+  37   1          NRF905_SendBuffer[2] = tmpCommandNo;
+  38   1          
+  39   1          // 命令流水号
+  40   1          //
+  41   1          NRF905_SendBuffer[3] = tmpCommandSerialNo;
+  42   1          
+  43   1          // 目的中继
+  44   1          //
+  45   1          NRF905_SendBuffer[4] = tmpRepeater1;
+  46   1          
+  47   1          // 中继1
+  48   1          //
+  49   1          NRF905_SendBuffer[5] = tmpRepeater1;
+  50   1          
+C51 COMPILER V9.54   COMMAND_DEVICETEST                                                    01/18/2017 12:57:29 PAGE 2   
+
+  51   1          // 中继2
+  52   1          //
+  53   1          NRF905_SendBuffer[6] = tmpRepeater2;
+  54   1          
+  55   1          // 中继3
+  56   1          //
+  57   1          NRF905_SendBuffer[7] = tmpRepeater3;
+  58   1          
+  59   1          // 数据（22字节）
+  60   1          //
+  61   1          NRF905_SendBuffer[8] = 0xA9;
+  62   1          NRF905_SendBuffer[9] = tmpDeviceNoL;
+  63   1          NRF905_SendBuffer[10] = tmpDeviceNoH;
+  64   1          NRF905_SendBuffer[11] = tmpDeviceType;
+  65   1          NRF905_SendBuffer[12] = App_Hal_Api.wireless->channelNo;
+  66   1          NRF905_SendBuffer[13] = tmpTestPacketNoL;
+  67   1          NRF905_SendBuffer[14] = tmpTestPacketNoH;
+  68   1          
+  69   1          // 内部和校验
+  70   1          //
+  71   1          tmpParityValue = Temporary_CalcSumParity(NRF905_SendBuffer + 8, 7);
+  72   1          NRF905_SendBuffer[15] = tmpParityValue;
+  73   1          NRF905_SendBuffer[16] = tmpParityValue >> 8;
+  74   1          
+  75   1          // 填充字符0xA3
+  76   1          //
+  77   1          memset(NRF905_SendBuffer + 17, 0xA9, 13);
+  78   1          
+  79   1          // 外部和校验
+  80   1          //
+  81   1          tmpParityValue = Temporary_CalcSumParity(NRF905_SendBuffer, 30);
+  82   1          NRF905_SendBuffer[30] = tmpParityValue;
+  83   1          NRF905_SendBuffer[31] = tmpParityValue >> 8;
+  84   1          
+  85   1          // 发送数据到无线设备
+  86   1          //
+  87   1              App_Hal_Api.wireless->write(NRF905_SendBuffer);
+  88   1              
+  89   1              // 根据中继来设置无线发送等待超时时间
+  90   1              //
+  91   1              Pca_Start(NRF905_SendBuffer, 0);
+  92   1      }
+  93          
+  94          
+  95          
+  96          // 转发设备的设备通讯测试包给电脑
+  97          //
+  98          void DeviceTest_SendDataToPC(uint8_t *Data)
+  99          {
+ 100   1          uint8_t tmpCommandSerialNo  = Data[3];
+ 101   1          
+ 102   1          uint8_t tmpDeviceNoL        = Data[9];
+ 103   1          
+ 104   1          uint8_t tmpDeviceNoH        = Data[10];
+ 105   1          
+ 106   1          uint8_t tmpDeviceType       = Data[11];
+ 107   1          
+ 108   1          uint8_t tmpTestPacketNoL    = Data[13];
+ 109   1          
+ 110   1          uint8_t tmpTestPacketNoH    = Data[14];
+ 111   1          
+ 112   1          // 设备编号
+C51 COMPILER V9.54   COMMAND_DEVICETEST                                                    01/18/2017 12:57:29 PAGE 3   
+
+ 113   1          //
+ 114   1          SocketData_SendBuffer[0] = tmpDeviceNoL;
+ 115   1          
+ 116   1          SocketData_SendBuffer[1] = tmpDeviceNoH;
+ 117   1          
+ 118   1          // 设备类型
+ 119   1          //
+ 120   1          SocketData_SendBuffer[2] = tmpDeviceType;
+ 121   1          
+ 122   1          // 测试包序号
+ 123   1          //
+ 124   1          SocketData_SendBuffer[3] = tmpTestPacketNoL;
+ 125   1          
+ 126   1          SocketData_SendBuffer[4] = tmpTestPacketNoH;
+ 127   1          
+ 128   1          // 发送中继器测试包给PC
+ 129   1          //
+ 130   1          PC_SendCommand(0x6E, tmpCommandSerialNo, SocketData_SendBuffer, 5);
+ 131   1      }
+ 132          
+ 133          
+ 134          
+ 135          
+ 136          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    420    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----      12
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

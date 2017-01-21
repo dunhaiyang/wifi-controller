@@ -1,0 +1,97 @@
+C51 COMPILER V9.54   MIDDLEWARE_SOCKET                                                     01/18/2017 12:57:31 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE MIDDLEWARE_SOCKET
+OBJECT MODULE PLACED IN ..\output\Middleware_Socket.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\MiddlewareSocket\Middleware_Socket.c LARGE OPTIMIZE(8,SPEED)
+                    - BROWSE INCDIR(.\HeadFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Command_Conter;.\He
+                    -adFile\App\Command_DataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile\App\Command_Wh
+                    -iteList;.\HeadFile\App\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareMenu;.\HeadFile\MiddlewareTask
+                    -;.\HeadFile\MiddlewareWireless;.\HeadFile\MiddlewareSocket;.\HeadFile\MiddlewareWesocket) DEBUG OBJECTEXTEND PRINT(..\li
+                    -sting\Middleware_Socket.lst) OBJECT(..\output\Middleware_Socket.obj)
+
+line level    source
+
+   1          #include "Middleware_Socket.h"
+   2          
+   3          
+   4          
+   5          
+   6          
+   7          void MiddlewareSocket_NetworkError(void)
+   8          {
+   9   1              SetStartScan(0);                                                                                                                                                        // ÔÝÍ£ÂÖÑ¯
+  10   1              
+  11   1              SetHeartbeatInterval(1);                                                                                                                                        // ÉèÖÃÐÄÌø¼ä¸ôÎª1
+  12   1      }
+  13          
+  14          
+  15          
+  16          // ½ÓÊÕÍøÂçÊý¾ÝÈÎÎñ
+  17          //
+  18          void MiddlewareSocket_FastTask(void)
+  19          {
+  20   1              static  uint8_t         MiddlewareSocket_Command[80];
+  21   1              
+  22   1              uint16_t        MiddlewareSocket_CommandLen = 0;
+  23   1              
+  24   1              // Èç¹ûÃ»ÓÐÊý¾Ý£¬ÄÇÃ´¾Í´Ó»º´æÖÐ¶ÁÈ¡Êý¾Ý
+  25   1              //
+  26   1      #ifdef  USING_MODULE_WIFI
+                      MiddlewareSocket_CommandLen = App_Hal_Api.wifi->read(MiddlewareSocket_Command);
+              #endif
+  29   1                      
+  30   1      #ifdef  USING_MODULE_NETWORK
+  31   1              MiddlewareSocket_CommandLen = App_Hal_Api.network->readUdp(MiddlewareSocket_Command);
+  32   1      #endif
+  33   1      
+  34   1              // Êý¾Ý²»Îª¿Õ£¬ÐÅµÀ¿ÉÓÃ»òÕß²»ÐèÒªÐÅµÀ£¬Ð£ÑéºÏ·¨£»Âú×ãÇ°ÃæÈýÖÖÌõ¼þÁ¢¼´Ö´ÐÐ
+  35   1              //
+  36   1              if (MiddlewareSocket_CommandLen && 
+  37   1                  (WiresslessChannel_Status == WirelessChannel_Free   ||
+  38   1                       MiddlewareSocket_Command[Enum_CommandNo] == 0x65       ||
+  39   1                       MiddlewareSocket_Command[Enum_CommandNo] == 0x69       ||
+  40   1                       MiddlewareSocket_Command[Enum_CommandNo] == 0x6F       ||
+  41   1                       MiddlewareSocket_Command[Enum_CommandNo] == 0x72       ||
+  42   1                       MiddlewareSocket_Command[Enum_CommandNo] == 0x73))
+  43   1              {
+  44   2                      if (PC_CheckCommand(MiddlewareSocket_Command, MiddlewareSocket_CommandLen))
+  45   2                      {
+  46   3                              App_Hal_Api.led->setTime(YELLOW_LED, 2);                                                                                        // ÁÁ»ÆµÆ
+  47   3                              
+  48   3                              Network_DealControlData(MiddlewareSocket_Command);                                                                      // ´¦Àí·þÎñÆ÷Êý¾Ý
+  49   3                              
+  50   3                              HookFunction_ReceivePcData();                                                                                                           // PC²»Ó¦´ðÐÄÌø¾ÍÍ£Ö¹ÂÖÑ¯Éè±¸£¬ÕâÀï½ÓÊÕµ½PCÈÎÒâÊý¾ÝÄ¬ÈÏÓÐÐÄÌ
+C51 COMPILER V9.54   MIDDLEWARE_SOCKET                                                     01/18/2017 12:57:31 PAGE 2   
+
+             -ø£¬±ÜÃâ·þÎñÆ÷ÈÎÎñ·±ÖØÀ´²»¼°Ó¦´ðÐÄÌø°ü
+  51   3                      }
+  52   2              }
+  53   1              
+  54   1      }
+  55          
+  56          
+  57          
+  58          
+  59          
+  60          
+  61          
+  62          
+  63          
+  64          
+  65          
+  66          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    158    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     80    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

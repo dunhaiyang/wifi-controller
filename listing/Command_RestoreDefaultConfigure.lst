@@ -1,0 +1,147 @@
+C51 COMPILER V9.54   COMMAND_RESTOREDEFAULTCONFIGURE                                       01/18/2017 12:57:30 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE COMMAND_RESTOREDEFAULTCONFIGURE
+OBJECT MODULE PLACED IN ..\output\Command_RestoreDefaultConfigure.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\App\Command_Device\Command_RestoreDefaultConfigure.c LARGE O
+                    -PTIMIZE(8,SPEED) BROWSE INCDIR(.\HeadFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Com
+                    -mand_Conter;.\HeadFile\App\Command_DataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFil
+                    -e\App\Command_WhiteList;.\HeadFile\App\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareMenu;.\HeadFil
+                    -e\MiddlewareTask;.\HeadFile\MiddlewareWireless;.\HeadFile\MiddlewareSocket;.\HeadFile\MiddlewareWesocket) DEBUG OBJECTEX
+                    -TEND PRINT(..\listing\Command_RestoreDefaultConfigure.lst) OBJECT(..\output\Command_RestoreDefaultConfigure.obj)
+
+line level    source
+
+   1          #include "Command_RestoreDefaultConfigure.h"
+   2          
+   3          uint8_t RestoreDefaultConfigure_DeviceType = 0xFF;
+   4          
+   5          void RestoreDefaultConfigure_DealData(uint8_t *Data)
+   6          {
+   7   1          uint8_t tmpCommandNo        = Data[0];
+   8   1          
+   9   1          uint8_t tmpCommandSerialNo  = Data[1];
+  10   1          
+  11   1          uint8_t tmpDeviceNoL        = Data[3];
+  12   1          
+  13   1          uint8_t tmpDeviceNoH        = Data[4];
+  14   1          
+  15   1          uint8_t tmpDeviceType       = Data[5];
+  16   1          
+  17   1          uint8_t tmpRepeater1        = Data[6];
+  18   1          
+  19   1          uint8_t tmpRepeater2        = Data[7];
+  20   1          
+  21   1          uint8_t tmpRepeater3        = Data[8];
+  22   1          
+  23   1          uint8_t tmpRestoreFlag1     = Data[9];
+  24   1          
+  25   1          uint8_t tmpRestoreFlag2     = Data[10];
+  26   1          
+  27   1          uint16_t tmpParityValue       = 0;
+  28   1          
+  29   1          // 保存设备类型，在应答包中使用
+  30   1          //
+  31   1          RestoreDefaultConfigure_DeviceType = tmpDeviceType;
+  32   1          
+  33   1          // 设备编号
+  34   1          //
+  35   1          NRF905_SendBuffer[0] = tmpDeviceNoL;
+  36   1          NRF905_SendBuffer[1] = tmpDeviceNoH;
+  37   1          
+  38   1          // 命令编号
+  39   1          //
+  40   1          NRF905_SendBuffer[2] = tmpCommandNo;
+  41   1          
+  42   1          // 命令流水号
+  43   1          //
+  44   1          NRF905_SendBuffer[3] = tmpCommandSerialNo;
+  45   1          
+  46   1          // 目的中继
+  47   1          //
+  48   1          NRF905_SendBuffer[4] = tmpRepeater1;
+  49   1          
+  50   1          // 中继1
+C51 COMPILER V9.54   COMMAND_RESTOREDEFAULTCONFIGURE                                       01/18/2017 12:57:30 PAGE 2   
+
+  51   1          //
+  52   1          NRF905_SendBuffer[5] = tmpRepeater1;
+  53   1          
+  54   1          // 中继2
+  55   1          //
+  56   1          NRF905_SendBuffer[6] = tmpRepeater2;
+  57   1          
+  58   1          // 中继3
+  59   1          //
+  60   1          NRF905_SendBuffer[7] = tmpRepeater3;
+  61   1          
+  62   1          // 数据
+  63   1          //
+  64   1          NRF905_SendBuffer[8] = tmpRestoreFlag1;
+  65   1          NRF905_SendBuffer[9] = tmpRestoreFlag2;
+  66   1          
+  67   1          // 外部和校验
+  68   1          //
+  69   1          tmpParityValue = Temporary_CalcSumParity(NRF905_SendBuffer, 30);
+  70   1          NRF905_SendBuffer[30] = tmpParityValue;
+  71   1          NRF905_SendBuffer[31] = tmpParityValue >> 8;
+  72   1          
+  73   1          // 发送数据到无线设备
+  74   1          //
+  75   1              App_Hal_Api.wireless->write(NRF905_SendBuffer);
+  76   1              
+  77   1              // 根据中继来设置无线发送等待超时时间
+  78   1              //
+  79   1              Pca_Start(NRF905_SendBuffer, 0);
+  80   1      }
+  81          
+  82          
+  83          void RestoreDefaultConfigure_SendDataToPC(uint8_t *Data)
+  84          {
+  85   1          uint8_t tmpDeviceNoL        = Data[0];
+  86   1          
+  87   1          uint8_t tmpDeviceNoH        = Data[1];
+  88   1          
+  89   1          uint8_t tmpCommandSerialNo  = Data[3];
+  90   1          
+  91   1          uint8_t tmpOperationResult  = Data[8];
+  92   1          
+  93   1          
+  94   1          // 设备编号
+  95   1          //
+  96   1          SocketData_SendBuffer[0] = tmpDeviceNoL;
+  97   1          SocketData_SendBuffer[1] = tmpDeviceNoH;
+  98   1          
+  99   1          // 设备编号
+ 100   1          //
+ 101   1          SocketData_SendBuffer[2] = RestoreDefaultConfigure_DeviceType;
+ 102   1          
+ 103   1          // 指令执行结果
+ 104   1          //
+ 105   1          SocketData_SendBuffer[3] = tmpOperationResult;
+ 106   1          
+ 107   1          // 发送中继器测试包给PC
+ 108   1          //
+ 109   1          PC_SendCommand(0x32, tmpCommandSerialNo, SocketData_SendBuffer, 4);
+ 110   1      }
+ 111          
+ 112          
+C51 COMPILER V9.54   COMMAND_RESTOREDEFAULTCONFIGURE                                       01/18/2017 12:57:30 PAGE 3   
+
+ 113          
+ 114          
+ 115          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    316    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =      1       9
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,169 @@
+C51 COMPILER V9.54   COMMMAND_SPECIALDEVICEINFO                                            01/18/2017 12:57:28 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE COMMMAND_SPECIALDEVICEINFO
+OBJECT MODULE PLACED IN ..\output\Commmand_SpecialDeviceInfo.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\App\Command_DataStructure\Commmand_SpecialDeviceInfo.c LARGE
+                    - OPTIMIZE(8,SPEED) BROWSE INCDIR(.\HeadFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\C
+                    -ommand_Conter;.\HeadFile\App\Command_DataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadF
+                    -ile\App\Command_WhiteList;.\HeadFile\App\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareMenu;.\HeadF
+                    -ile\MiddlewareTask;.\HeadFile\MiddlewareWireless;.\HeadFile\MiddlewareSocket;.\HeadFile\MiddlewareWesocket) DEBUG OBJECT
+                    -EXTEND PRINT(..\listing\Commmand_SpecialDeviceInfo.lst) OBJECT(..\output\Commmand_SpecialDeviceInfo.obj)
+
+line level    source
+
+   1          #include "Command_SpecialDeviceInfo.h"
+   2          
+   3          
+   4          // 设备列表, 设备列表元素数量
+   5          //
+   6          SpecialDeviceInfo_Typedef SpecialDeviceList[SpecialDeviceListSum];
+   7          
+   8          
+   9          // 已经存储了多少设备列表
+  10          //
+  11          uint8_t   SpecialDeviceListUsage = 0;
+  12          
+  13          
+  14          
+  15          // 初始化设备列表
+  16          //
+  17          void SpecialDeviceInfo_Init(void)
+  18          {
+  19   1          uint8_t index;
+  20   1          
+  21   1          for (index = 0; index < SpecialDeviceListSum; ++index)
+  22   1          {
+  23   2              SpecialDeviceList[index].deviceValidFlag = 0;
+  24   2          }
+  25   1      }
+  26          
+  27          
+  28          // 查找指定数据, 返回-1表示找不到，其他值标志找到的下标
+  29          //
+  30          int8_t SpecialDeviceInfo_FindDeviceList(uint8_t deviceNoL, uint8_t deviceNoH)
+  31          {
+  32   1          uint8_t index;
+  33   1          
+  34   1          for (index = 0; index < SpecialDeviceListSum; index++)
+  35   1          {
+  36   2              if (SpecialDeviceList[index].deviceValidFlag &&
+  37   2                  SpecialDeviceList[index].deviceNumber[0] == deviceNoL && 
+  38   2                  SpecialDeviceList[index].deviceNumber[1] == deviceNoH)
+  39   2              {
+  40   3                  return index;
+  41   3              }
+  42   2          }
+  43   1          
+  44   1          return -1;
+  45   1      }
+  46          
+  47          
+  48          // 增加设备列表
+  49          //
+  50          bool SpecialDeviceInfo_AddDeviceList(uint8_t *deviceListAddress)
+C51 COMPILER V9.54   COMMMAND_SPECIALDEVICEINFO                                            01/18/2017 12:57:28 PAGE 2   
+
+  51          {
+  52   1          int8_t retVal;
+  53   1          
+  54   1          uint8_t index;
+  55   1          
+  56   1          retVal = SpecialDeviceInfo_FindDeviceList(deviceListAddress[0], deviceListAddress[1]);
+  57   1          
+  58   1          if (retVal != -1)
+  59   1          {
+  60   2              return 0;
+  61   2          }
+  62   1      
+  63   1          for (index = 0; index < SpecialDeviceListSum; ++index)
+  64   1          {
+  65   2              // 正式插入设备列表数据
+  66   2              //
+  67   2              if (!SpecialDeviceList[index].deviceValidFlag)
+  68   2              {
+  69   3                  SpecialDeviceList[index].deviceNumber[0] = deviceListAddress[0];
+  70   3                  SpecialDeviceList[index].deviceNumber[1] = deviceListAddress[1];
+  71   3                  
+  72   3                  SpecialDeviceList[index].deviceMainRoute[0] = deviceListAddress[3];
+  73   3                  SpecialDeviceList[index].deviceMainRoute[1] = deviceListAddress[4];
+  74   3                  SpecialDeviceList[index].deviceMainRoute[2] = deviceListAddress[5];
+  75   3                  SpecialDeviceList[index].deviceValidFlag = 1;
+  76   3                  
+  77   3                  SpecialDeviceListUsage++;
+  78   3                  
+  79   3                  return 1;
+  80   3              }
+  81   2          }
+  82   1      
+  83   1          return 0;
+  84   1      }
+  85          
+  86          
+  87          // 删除设备列表中设备
+  88          //
+  89          bool SpecialDeviceInfo_DeleteDeviceList(uint8_t *deviceListAddress)
+  90          {
+  91   1          int8_t retVal;
+  92   1          
+  93   1          retVal = SpecialDeviceInfo_FindDeviceList(deviceListAddress[0], deviceListAddress[1]);
+  94   1          
+  95   1          if (retVal != -1)
+  96   1          {
+  97   2              SpecialDeviceList[retVal].deviceValidFlag = 0;
+  98   2              
+  99   2              SpecialDeviceListUsage--;
+ 100   2          }
+ 101   1          
+ 102   1          return 1;
+ 103   1      }
+ 104          
+ 105          
+ 106          // 清空设备列表
+ 107          //
+ 108          bool SpecialDeviceInfo_EmptyDeviceList()
+ 109          {
+ 110   1          uint8_t index;
+ 111   1      
+ 112   1          for (index = 0; index < SpecialDeviceListSum; ++index)
+C51 COMPILER V9.54   COMMMAND_SPECIALDEVICEINFO                                            01/18/2017 12:57:28 PAGE 3   
+
+ 113   1          {
+ 114   2              // 正式插入设备列表数据
+ 115   2              //
+ 116   2              SpecialDeviceList[index].deviceValidFlag = 0;
+ 117   2          }
+ 118   1          
+ 119   1          SpecialDeviceListUsage = 0;
+ 120   1          
+ 121   1          return 1;
+ 122   1      }
+ 123          
+ 124          
+ 125          
+ 126          
+ 127          
+ 128          
+ 129          
+ 130          
+ 131          
+ 132          
+ 133          
+ 134          
+ 135          
+ 136          
+ 137          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    351    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     19    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,85 @@
+C51 COMPILER V9.54   WIFI                                                                  01/18/2017 12:40:34 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE WIFI
+OBJECT MODULE PLACED IN ..\output\Wifi.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\KQA_OS\Wifi.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(.\HeadFi
+                    -le\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Command_Conter;.\HeadFile\App\Command_Data
+                    -Structure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile\App\Command_WhiteList;.\HeadFile\App\
+                    -Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareMenu;.\HeadFile\MiddlewareTask;.\HeadFile\MiddlewareW
+                    -ireless;.\HeadFile\MiddlewareSocket;.\HeadFile\MiddlewareWesocket) DEBUG OBJECTEXTEND PRINT(..\listing\Wifi.lst) OBJECT(
+                    -..\output\Wifi.obj)
+
+line level    source
+
+   1          #include "Wifi.h"
+   2          
+   3          
+   4          static  Wifi *Wifi_self;
+   5          
+   6          
+   7          void Wifi_LinkAP(Uint8P_Uint8P *ssid_key)
+   8          {
+   9   1              HAL_WIFI_LINKAP(ssid_key->para1, ssid_key->para2);
+  10   1      }
+  11          
+  12          
+  13          void Wifi_ConnectServer(Uint8P_Uint8P *ip_port)
+  14          {
+  15   1              HAL_WIFI_CONNECTSERVER(ip_port->para1, ip_port->para2);
+  16   1      }
+  17          
+  18          
+  19          void Wifi_Init(void *self)
+  20          {
+  21   1              Wifi_self = self;
+  22   1              
+  23   1              Wifi_self->init = Wifi_Init;
+  24   1              
+  25   1              Wifi_self->getUart = HAL_WIFI_GETUART;
+  26   1              
+  27   1              Wifi_self->linkAP = Wifi_LinkAP;
+  28   1              
+  29   1              Wifi_self->queryMac = HAL_WIFI_QUERYMAC;
+  30   1              
+  31   1              Wifi_self->reboot = HAL_WIFI_REBOOT; 
+  32   1              
+  33   1              Wifi_self->scan = HAL_WIFI_SCAN; 
+  34   1              
+  35   1              Wifi_self->hotspotStatus = HAL_WIFI_HOTSPOTSTATUS; 
+  36   1              
+  37   1              Wifi_self->serverStatus = HAL_WIFI_SERVERSTATUS;
+  38   1              
+  39   1              Wifi_self->dhcp = HAL_WIFI_DHCP;
+  40   1              
+  41   1              Wifi_self->ping = HAL_WIFI_PING;
+  42   1              
+  43   1              Wifi_self->connectServer = Wifi_ConnectServer;
+  44   1              
+  45   1              Wifi_self->disconnectServer = HAL_WIFI_DISCONNECTSERVER; 
+  46   1              
+  47   1              Wifi_self->write = HAL_WIFI_SEND;
+  48   1              
+  49   1              Wifi_self->read = HAL_WIFI_RECEIVE;
+  50   1              
+C51 COMPILER V9.54   WIFI                                                                  01/18/2017 12:40:34 PAGE 2   
+
+  51   1              HAL_WIFI_INIT();
+  52   1      }
+  53          
+  54          
+  55          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    553    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =      3       6
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

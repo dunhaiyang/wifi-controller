@@ -1,0 +1,168 @@
+C51 COMPILER V9.54   JSON                                                                  01/10/2017 18:08:20 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE JSON
+OBJECT MODULE PLACED IN ..\output\Json.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\MiddlewareWesocket\Json.c LARGE OPTIMIZE(8,SPEED) BROWSE INC
+                    -DIR(.\HeadFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Command_Conter;.\HeadFile\App\
+                    -Command_DataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile\App\Command_WhiteList;.\H
+                    -eadFile\App\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareWesocket) DEBUG OBJECTEXTEND PRINT(..\lis
+                    -ting\Json.lst) OBJECT(..\output\Json.obj)
+
+line level    source
+
+   1          #include "Json.h"
+   2          
+   3          
+   4          #define Json_GetDecimal(v1, v2, v3)                                     (((v1 - '0') * 100) + ((v2 - '0') * 10) + (v3 - '0'))
+   5          
+   6          #define Json_GetDoubleDecimal(v1, v2, v3, v4, v5)       (((v1 - '0') * 10000) + ((v2 - '0') * 1000) + ((v3 - '0'
+             -) * 100) + ((v4 - '0')* 10) + (v5 - '0'))
+   7          
+   8          
+   9          // 从负载数据中获取对应的字符串值
+  10          //
+  11          bool Json_ReceiveFrameStringValue(uint8_t **frameFirstByte, uint8_t *string, uint8_t stringLen, uint8_t **
+             -value)
+  12          {
+  13   1              *value = strstr(*frameFirstByte, string);
+  14   1              
+  15   1              if (*value)
+  16   1              {
+  17   2                      *value += stringLen;
+  18   2                      
+  19   2                      *frameFirstByte = *value;
+  20   2                      
+  21   2                      return 1;
+  22   2              }
+  23   1              
+  24   1              return 0;
+  25   1      }
+  26          
+  27          
+  28          // 从负载数据中获取对应的字符串值的第一个字符
+  29          //
+  30          bool Json_ReceiveFrameFirstbyteValue(uint8_t **frameFirstByte, uint8_t *string, uint8_t stringLen, uint8_t
+             - *value)
+  31          {
+  32   1              uint8_t *tmpBuffer = strstr(*frameFirstByte, string);
+  33   1              
+  34   1              if (tmpBuffer)
+  35   1              {
+  36   2                      tmpBuffer += stringLen;
+  37   2                      
+  38   2                      *frameFirstByte = tmpBuffer;
+  39   2                      
+  40   2                      *value = *tmpBuffer;
+  41   2                      
+  42   2                      return 1;
+  43   2              }
+  44   1              
+  45   1              return 0;
+  46   1      }
+  47          
+  48          
+C51 COMPILER V9.54   JSON                                                                  01/10/2017 18:08:20 PAGE 2   
+
+  49          // 从负载数据中获取对应的字节值
+  50          //
+  51          bool Json_ReceiveFrameCharValue(uint8_t **frameFirstByte, uint8_t *string, uint8_t stringLen, uint8_t *val
+             -ue)
+  52          {
+  53   1              uint8_t *tmpBuffer = strstr(*frameFirstByte, string);
+  54   1              
+  55   1              if (tmpBuffer)
+  56   1              {
+  57   2                      tmpBuffer += stringLen;
+  58   2                      
+  59   2                      *frameFirstByte = tmpBuffer;
+  60   2                      
+  61   2                      *value = Json_GetDecimal(tmpBuffer[0], tmpBuffer[1], tmpBuffer[2]);
+  62   2                      
+  63   2                      return 1;
+  64   2              }
+  65   1              
+  66   1              return 0;
+  67   1      }
+  68          
+  69          
+  70          // 从负载数据中获取对应的双字节值
+  71          //
+  72          bool Json_ReceiveFrameUintValue(uint8_t **frameFirstByte, uint8_t *string, uint8_t stringLen, uint16_t *va
+             -lue)
+  73          {
+  74   1              uint8_t *tmpBuffer = strstr(*frameFirstByte, string);
+  75   1              
+  76   1              if (tmpBuffer)
+  77   1              {
+  78   2                      tmpBuffer += stringLen;
+  79   2                      
+  80   2                      *frameFirstByte = tmpBuffer;
+  81   2                      
+  82   2                      *value = Json_GetDoubleDecimal(tmpBuffer[0], tmpBuffer[1], tmpBuffer[2], tmpBuffer[3], tmpBuffer[4]);
+  83   2                      
+  84   2                      return 1;
+  85   2              }
+  86   1              
+  87   1              return 0;
+  88   1      }
+  89          
+  90          // 从负载数据中获取对应的路由信息
+  91          //
+  92          bool Json_ReceiveFrameRouterValue(uint8_t **frameFirstByte, uint8_t *string, uint8_t stringLen, uint8_t *v
+             -alue)
+  93          {
+  94   1              uint8_t *tmpBuffer = strstr(*frameFirstByte, string);
+  95   1              
+  96   1              if (tmpBuffer)
+  97   1              {
+  98   2                      tmpBuffer += stringLen;
+  99   2                      
+ 100   2                      *frameFirstByte = tmpBuffer;
+ 101   2                      
+ 102   2                      value[0] = Json_GetDecimal(tmpBuffer[0], tmpBuffer[1], tmpBuffer[2]);
+ 103   2                      
+ 104   2                      value[1] = Json_GetDecimal(tmpBuffer[3], tmpBuffer[4], tmpBuffer[5]);
+ 105   2                      
+ 106   2                      value[2] = Json_GetDecimal(tmpBuffer[6], tmpBuffer[7], tmpBuffer[8]);
+ 107   2                      
+C51 COMPILER V9.54   JSON                                                                  01/10/2017 18:08:20 PAGE 3   
+
+ 108   2                      return 1;
+ 109   2              }
+ 110   1              
+ 111   1              return 0;
+ 112   1      }
+ 113          
+ 114          
+ 115          
+ 116          
+ 117          
+ 118          
+ 119          
+ 120          
+ 121          
+ 122          
+ 123          
+ 124          
+ 125          
+ 126          
+ 127          
+ 128          
+ 129          
+ 130          
+ 131          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1043    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----      62
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

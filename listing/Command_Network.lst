@@ -1,0 +1,170 @@
+C51 COMPILER V9.54   COMMAND_NETWORK                                                       01/18/2017 12:57:31 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE COMMAND_NETWORK
+OBJECT MODULE PLACED IN ..\output\Command_Network.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\App\Command_Kernel\Command_Network.c LARGE OPTIMIZE(8,SPEED)
+                    - BROWSE INCDIR(.\HeadFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Command_Conter;.\He
+                    -adFile\App\Command_DataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile\App\Command_Wh
+                    -iteList;.\HeadFile\App\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareMenu;.\HeadFile\MiddlewareTask
+                    -;.\HeadFile\MiddlewareWireless;.\HeadFile\MiddlewareSocket;.\HeadFile\MiddlewareWesocket) DEBUG OBJECTEXTEND PRINT(..\li
+                    -sting\Command_Network.lst) OBJECT(..\output\Command_Network.obj)
+
+line level    source
+
+   1          #include "Command_Network.h"
+   2          
+   3          
+   4          void Network_DealControlData(uint8_t *command)
+   5          {
+   6   1          // 处理PC发送过来的指令
+   7   1          //
+   8   1          switch (command[Enum_CommandNo])
+   9   1          {
+  10   2              case 0x03:          // 读取一条脱机数据
+  11   2                  ReadOneOfflineData_DealData(command);
+  12   2                  break;
+  13   2              
+  14   2              case 0x05:          // 删除一条脱机数据
+  15   2                  DeleteOneOfflineData_DealData(command);
+  16   2                  break;
+  17   2              
+  18   2              case 0x07:          // 删除某个区间的脱机数据
+  19   2                  DeleteSomeAreaData_DealData(command);
+  20   2                  break;
+  21   2              
+  22   2              case 0x09:          // 数据结构恢复到出厂状态
+  23   2                  RestoreDataStructure_DealData(command);
+  24   2                  break;
+  25   2              
+  26   2              case 0x0B:                      // 序列号巡查与配置
+  27   2                  SerialNoWatchAndConfigure_DealData(command);
+  28   2                  break;
+  29   2              
+  30   2              case 0x0D:          // 修改设备序列号
+  31   2                  ChangeDeviceSerialNo_DealData(command);
+  32   2                  break;
+  33   2              
+  34   2              case 0x0F:          // 初始化白名单
+  35   2                  WhiteListInit_DealData(command);
+  36   2                  break;
+  37   2              
+  38   2              case 0x11:          // 上传白名单
+  39   2                  WhiteListUpload_DealData(command);
+  40   2                  break;
+  41   2              
+  42   2              case 0x13:          // 远程控制指令
+  43   2                  RealtimeControl_DealData(command);
+  44   2                  break;
+  45   2              
+  46   2              case 0x14:          // 现场控制指令
+  47   2                  WhiteListUpload_DealData(command);
+  48   2                  break;
+  49   2              
+  50   2              case 0x15:          // 读取指针名单区的指针
+C51 COMPILER V9.54   COMMAND_NETWORK                                                       01/18/2017 12:57:31 PAGE 2   
+
+  51   2                  ReadWhiteListPointer_DealData(command);
+  52   2                  break;
+  53   2                      
+  54   2                      case 0x17:                      // 读取白名单
+  55   2                  ReadWhiteList_DealData(command);
+  56   2                  break;
+  57   2              
+  58   2              case 0x19:          // 读写配置参数
+  59   2                  ReadWriteConfigureParameter_DealData(command);
+  60   2                  break;
+  61   2              
+  62   2              case 0x1B:          // 读取所有交易流水
+  63   2                  ReadAllTradeRecord_DealData(command);
+  64   2                  break;
+  65   2                      
+  66   2                      case 0x1D:                      // 远程升级
+  67   2                              ProgramUpdate_DealData(command);
+  68   2                              break;
+  69   2              
+  70   2              case 0x31:          // 回复到出厂状态
+  71   2                  RestoreDefaultConfigure_DealData(command);
+  72   2                  break;
+  73   2                  break;
+  74   2                      
+  75   2                      case 0x61:                      // 搜索IP
+  76   2                              SearchIp_SendDataToPC(command);
+  77   2                              break;
+  78   2                      
+  79   2                      case 0x63:                      // 网络参数配置
+  80   2                              NetworkParameter_SendDataToPC(command);
+  81   2                              break;
+  82   2              
+  83   2              case 0x65:          // 控制器通讯测试命令
+  84   2                  ControlerTest_SendDataToPC(command);
+  85   2                  break;
+  86   2              
+  87   2              case 0x67:          // 中继器通讯测试
+  88   2                  RepeaterTest_DealData(command);
+  89   2                  break;
+  90   2              
+  91   2              case 0x69:          // 控制器参数配置
+  92   2                  ControlerParameter_DealData(command);
+  93   2                  break;
+  94   2              
+  95   2              case 0x6B:          // 中继器参数配置
+  96   2                  RepeaterParameter_DealData(command);
+  97   2                  break;
+  98   2              
+  99   2              case 0x6D:          // 设备通讯测试
+ 100   2                  DeviceTest_DealData(command);
+ 101   2                  break;
+ 102   2              
+ 103   2              case 0x6F:          // 控制器的设备列表配置
+ 104   2                  ControlerDeviceList_DealData(command);
+ 105   2                  break;
+ 106   2              
+ 107   2              case 0x72:          // 心跳应答包
+ 108   2                  Heartbeat_DealData(command);
+ 109   2                  break;
+ 110   2              
+ 111   2              case 0x73:          // 控制器工作模式控制
+ 112   2                  ControlerWorkMode_DealData(command);
+C51 COMPILER V9.54   COMMAND_NETWORK                                                       01/18/2017 12:57:31 PAGE 3   
+
+ 113   2                  break;
+ 114   2              
+ 115   2              case 0xF1:          // 一卡通设备数据应答(PC请求删除数据)
+ 116   2                  OneCardDataUploadDelete_DealData(command);
+ 117   2                  break;
+ 118   2              
+ 119   2              case 0xF3:          // 一卡通设备操作指令
+ 120   2                  OneCardOperation_DealData(command);
+ 121   2      //                      printf("333\r\n");
+ 122   2                  break;
+ 123   2              
+ 124   2              default:            // 无法识别的指令
+ 125   2                  break;
+ 126   2          }
+ 127   1      }
+ 128          
+ 129          
+ 130          
+ 131          
+ 132          
+ 133          
+ 134          
+ 135          
+ 136          
+ 137          
+ 138          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    486    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----       3
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

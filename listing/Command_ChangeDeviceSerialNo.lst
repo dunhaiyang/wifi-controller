@@ -1,0 +1,168 @@
+C51 COMPILER V9.54   COMMAND_CHANGEDEVICESERIALNO                                          01/18/2017 12:57:30 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE COMMAND_CHANGEDEVICESERIALNO
+OBJECT MODULE PLACED IN ..\output\Command_ChangeDeviceSerialNo.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\App\Command_Device\Command_ChangeDeviceSerialNo.c LARGE OPTI
+                    -MIZE(8,SPEED) BROWSE INCDIR(.\HeadFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Comman
+                    -d_Conter;.\HeadFile\App\Command_DataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile\A
+                    -pp\Command_WhiteList;.\HeadFile\App\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareMenu;.\HeadFile\M
+                    -iddlewareTask;.\HeadFile\MiddlewareWireless;.\HeadFile\MiddlewareSocket;.\HeadFile\MiddlewareWesocket) DEBUG OBJECTEXTEN
+                    -D PRINT(..\listing\Command_ChangeDeviceSerialNo.lst) OBJECT(..\output\Command_ChangeDeviceSerialNo.obj)
+
+line level    source
+
+   1          #include "Command_ChangeDeviceSerialNo.h"
+   2          
+   3          
+   4          uint8_t ChangeDeviceSerialNo_DeviceType = 0xFF;
+   5          
+   6          
+   7          void ChangeDeviceSerialNo_DealData(uint8_t *Data)
+   8          {
+   9   1          uint8_t tmpCommandNo        = Data[0];
+  10   1          
+  11   1          uint8_t tmpCommandSerialNo  = Data[1];
+  12   1          
+  13   1          uint8_t tmpDeviceNoL        = Data[3];
+  14   1          
+  15   1          uint8_t tmpDeviceNoH        = Data[4];
+  16   1          
+  17   1          uint8_t tmpDeviceType       = Data[5];
+  18   1          
+  19   1          uint8_t tmpRepeater1        = Data[6];
+  20   1          
+  21   1          uint8_t tmpRepeater2        = Data[7];
+  22   1          
+  23   1          uint8_t tmpRepeater3        = Data[8];
+  24   1          
+  25   1          uint16_t tmpParityValue       = 0;
+  26   1          
+  27   1          // 保存设备类型，在应答包中使用
+  28   1          //
+  29   1          ChangeDeviceSerialNo_DeviceType = tmpDeviceType;
+  30   1          
+  31   1          
+  32   1          // 设备编号
+  33   1          //
+  34   1          NRF905_SendBuffer[0] = tmpDeviceNoL;
+  35   1          
+  36   1          NRF905_SendBuffer[1] = tmpDeviceNoH;
+  37   1          
+  38   1          // 命令编号
+  39   1          //
+  40   1          NRF905_SendBuffer[2] = tmpCommandNo;
+  41   1          
+  42   1          // 命令流水号
+  43   1          //
+  44   1          NRF905_SendBuffer[3] = tmpCommandSerialNo;
+  45   1          
+  46   1          // 目的中继
+  47   1          //
+  48   1          NRF905_SendBuffer[4] = tmpRepeater1;
+  49   1          
+  50   1          // 中继1
+C51 COMPILER V9.54   COMMAND_CHANGEDEVICESERIALNO                                          01/18/2017 12:57:30 PAGE 2   
+
+  51   1          //
+  52   1          NRF905_SendBuffer[5] = tmpRepeater1;
+  53   1          
+  54   1          // 中继2
+  55   1          //
+  56   1          NRF905_SendBuffer[6] = tmpRepeater2;
+  57   1          
+  58   1          // 中继3
+  59   1          //
+  60   1          NRF905_SendBuffer[7] = tmpRepeater3;
+  61   1          
+  62   1          // 数据（22字节）
+  63   1          //
+  64   1          NRF905_SendBuffer[8] = 0xFC;
+  65   1          
+  66   1          NRF905_SendBuffer[9] = tmpDeviceNoL;
+  67   1          
+  68   1          NRF905_SendBuffer[10] = tmpDeviceNoH;
+  69   1          
+  70   1          NRF905_SendBuffer[11] = tmpDeviceType;
+  71   1          
+  72   1          NRF905_SendBuffer[12] = App_Hal_Api.wireless->channelNo;
+  73   1          
+  74   1          memcpy(NRF905_SendBuffer + 13, Data + 9, 8);
+  75   1          
+  76   1          // 内部和校验
+  77   1          //
+  78   1          tmpParityValue = Temporary_CalcSumParity(NRF905_SendBuffer + 8, 13);
+  79   1          NRF905_SendBuffer[21] = tmpParityValue;
+  80   1          NRF905_SendBuffer[22] = tmpParityValue >> 8;
+  81   1          
+  82   1          // 填充字符0xA3
+  83   1          //
+  84   1          NRF905_SendBuffer[23] = 0xFC;
+  85   1          NRF905_SendBuffer[24] = 0xFC;
+  86   1          NRF905_SendBuffer[25] = 0xFC;
+  87   1          NRF905_SendBuffer[26] = 0xFC;
+  88   1          NRF905_SendBuffer[27] = 0xFC;
+  89   1          NRF905_SendBuffer[28] = 0xFC;
+  90   1          NRF905_SendBuffer[29] = 0xFC;
+  91   1          
+  92   1          // 外部和校验
+  93   1          //
+  94   1          tmpParityValue = Temporary_CalcSumParity(NRF905_SendBuffer, 30);
+  95   1          NRF905_SendBuffer[30] = tmpParityValue;
+  96   1          NRF905_SendBuffer[31] = tmpParityValue >> 8;
+  97   1          
+  98   1          // 发送数据到无线设备
+  99   1          //
+ 100   1              App_Hal_Api.wireless->write(NRF905_SendBuffer);
+ 101   1              
+ 102   1              // 根据中继来设置无线发送等待超时时间
+ 103   1              //
+ 104   1              Pca_Start(NRF905_SendBuffer, 0);
+ 105   1      }
+ 106          
+ 107          
+ 108          void ChangeDeviceSerialNo_SendDataToPC(uint8_t *Data)
+ 109          {
+ 110   1          uint8_t tmpDeviceNoL        = Data[0];
+ 111   1          
+ 112   1          uint8_t tmpDeviceNoH        = Data[1];
+C51 COMPILER V9.54   COMMAND_CHANGEDEVICESERIALNO                                          01/18/2017 12:57:30 PAGE 3   
+
+ 113   1          
+ 114   1          uint8_t tmpCommandSerialNo  = Data[3];
+ 115   1          
+ 116   1          // 设备编号
+ 117   1          //
+ 118   1          SocketData_SendBuffer[0] = tmpDeviceNoL;
+ 119   1          
+ 120   1          SocketData_SendBuffer[1] = tmpDeviceNoH;
+ 121   1          
+ 122   1          // 设备类型
+ 123   1          //
+ 124   1          SocketData_SendBuffer[2] = ChangeDeviceSerialNo_DeviceType;
+ 125   1          
+ 126   1          memcpy(SocketData_SendBuffer + 3, Data + 13, 9);
+ 127   1          
+ 128   1          // 发送中继器测试包给PC
+ 129   1          //
+ 130   1          PC_SendCommand(0x0E, tmpCommandSerialNo, SocketData_SendBuffer, 12);
+ 131   1      }
+ 132          
+ 133          
+ 134          
+ 135          
+ 136          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    415    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =      1      10
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

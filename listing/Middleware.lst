@@ -1,0 +1,592 @@
+C51 COMPILER V9.54   MIDDLEWARE                                                            01/10/2017 18:08:20 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE MIDDLEWARE
+OBJECT MODULE PLACED IN ..\output\Middleware.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\MiddlewareWesocket\Middleware.c LARGE OPTIMIZE(8,SPEED) BROW
+                    -SE INCDIR(.\HeadFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Command_Conter;.\HeadFil
+                    -e\App\Command_DataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile\App\Command_WhiteLi
+                    -st;.\HeadFile\App\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareWesocket) DEBUG OBJECTEXTEND PRINT(
+                    -..\listing\Middleware.lst) OBJECT(..\output\Middleware.obj)
+
+line level    source
+
+   1          #include "Middleware.h"
+   2          
+   3          
+   4          Middleware_Typedef MiddlewareInfo;
+   5          
+   6          
+   7          uint8_t         __Middleware_Send_ReceiveBuffer[601];
+   8          
+   9          
+  10          uint16_t        __Middleware_Send_ReceiveBufferLen;
+  11          
+  12          
+  13          uint8_t code  __Middleware_WordArray[] = "0123456789abcdef";
+  14          
+  15          
+  16          void __Middleware_FastAck(void)
+  17          {
+  18   1      //      uint8_t         sendBufferLen = 0;
+  19   1      //      
+  20   1      //      // websocket前缀
+  21   1      //      //
+  22   1      //      __Middleware_Send_ReceiveBuffer[sendBufferLen++] = 0x81;
+  23   1      //      
+  24   1      //      __Middleware_Send_ReceiveBuffer[sendBufferLen++] = 0x80;                // 需要掩码
+  25   1      //      
+  26   1      //      // 掩码
+  27   1      //      //
+  28   1      //      __Middleware_Send_ReceiveBuffer[sendBufferLen++] = 0x00;
+  29   1      //      
+  30   1      //      __Middleware_Send_ReceiveBuffer[sendBufferLen++] = 0x00;
+  31   1      //      
+  32   1      //      __Middleware_Send_ReceiveBuffer[sendBufferLen++] = 0x00;
+  33   1      //      
+  34   1      //      __Middleware_Send_ReceiveBuffer[sendBufferLen++] = 0x00;
+  35   1      //      
+  36   1      //      // 设备编号和设备序列号
+  37   1      //      //
+  38   1      //      memcpy(__Middleware_Send_ReceiveBuffer + sendBufferLen, "{\"cn\":\"", 7); sendBufferLen += 7;
+  39   1      //      
+  40   1      //      __Middleware_Send_ReceiveBuffer[sendBufferLen++] = Middleware_Get_FastAckCmdNo / 100 + '0';
+  41   1      //      
+  42   1      //      __Middleware_Send_ReceiveBuffer[sendBufferLen++] = Middleware_Get_FastAckCmdNo /10 % 10 + '0';
+  43   1      //      
+  44   1      //      __Middleware_Send_ReceiveBuffer[sendBufferLen++] = Middleware_Get_FastAckCmdNo % 10 + '0';
+  45   1      //      
+  46   1      //      memcpy(__Middleware_Send_ReceiveBuffer + sendBufferLen, "\",\"csn\":\"", 9); sendBufferLen += 9;
+  47   1      //      
+  48   1      //      __Middleware_Send_ReceiveBuffer[sendBufferLen++] = Middleware_Get_FastAckSerialNo / 10000 + '0';
+  49   1      //      
+  50   1      //      __Middleware_Send_ReceiveBuffer[sendBufferLen++] = Middleware_Get_FastAckSerialNo /1000 % 10 + '0';
+  51   1      //      
+C51 COMPILER V9.54   MIDDLEWARE                                                            01/10/2017 18:08:20 PAGE 2   
+
+  52   1      //      __Middleware_Send_ReceiveBuffer[sendBufferLen++] = Middleware_Get_FastAckSerialNo /100 % 10 + '0';
+  53   1      //      
+  54   1      //      __Middleware_Send_ReceiveBuffer[sendBufferLen++] = Middleware_Get_FastAckSerialNo /10 % 10 + '0';
+  55   1      //      
+  56   1      //      __Middleware_Send_ReceiveBuffer[sendBufferLen++] = Middleware_Get_FastAckSerialNo % 10 + '0';
+  57   1      //      
+  58   1      //      // 指令执行结果
+  59   1      //      //
+  60   1      //      if (Middleware_GetError_FastAck())
+  61   1      //      {
+  62   1      //              memcpy(__Middleware_Send_ReceiveBuffer + sendBufferLen, "\",\"result\":false}", 17); sendBufferLen += 
+             -17;
+  63   1      //              
+  64   1      //              Middleware_ClearError_FastAck();
+  65   1      //      }
+  66   1      //      else
+  67   1      //      {
+  68   1      //              memcpy(__Middleware_Send_ReceiveBuffer + sendBufferLen, "\",\"result\":true}", 16); sendBufferLen += 1
+             -6;
+  69   1      //      }
+  70   1      //      
+  71   1      //      // 设置负载长度
+  72   1      //      //
+  73   1      //      __Middleware_Send_ReceiveBuffer[1] |= sendBufferLen - 6;                // 负载不包括掩码
+  74   1      //      
+  75   1      //      Ch395_Write(peerSockfd, __Middleware_Send_ReceiveBuffer, sendBufferLen);
+  76   1      }
+  77          
+  78          
+  79          void __Middleware_SendPollDataToPC(void)
+  80          {
+  81   1      //      uint16_t        sendBufferLen = 0;
+  82   1      //      
+  83   1      //      uint8_t         *tmpData = 0;
+  84   1      //      
+  85   1      //      uint8_t         i;
+  86   1      //      
+  87   1      //      // websocket前缀
+  88   1      //      //
+  89   1      //      __Middleware_Send_ReceiveBuffer[sendBufferLen++] = 0x81;
+  90   1      //      
+  91   1      //      __Middleware_Send_ReceiveBuffer[sendBufferLen++] = 0xFE;
+  92   1      //      
+  93   1      //      // 长度
+  94   1      //      //
+  95   1      //      __Middleware_Send_ReceiveBuffer[sendBufferLen++] = 0x00;
+  96   1      //      
+  97   1      //      __Middleware_Send_ReceiveBuffer[sendBufferLen++] = 0x00;
+  98   1      //      
+  99   1      //      // 增加掩码
+ 100   1      //      //
+ 101   1      //      __Middleware_Send_ReceiveBuffer[sendBufferLen++] = 0x00;
+ 102   1      //      
+ 103   1      //      __Middleware_Send_ReceiveBuffer[sendBufferLen++] = 0x00;
+ 104   1      //      
+ 105   1      //      __Middleware_Send_ReceiveBuffer[sendBufferLen++] = 0x00;
+ 106   1      //      
+ 107   1      //      __Middleware_Send_ReceiveBuffer[sendBufferLen++] = 0x00;
+ 108   1      //      
+ 109   1      //      
+ 110   1      //      // 设备编号和设备序列号
+ 111   1      //      //
+C51 COMPILER V9.54   MIDDLEWARE                                                            01/10/2017 18:08:20 PAGE 3   
+
+ 112   1      //      memcpy(__Middleware_Send_ReceiveBuffer + sendBufferLen, "{\"cn\":\"007\",\"csn\":\"", 19); sendBufferLe
+             -n += 19;
+ 113   1      //      
+ 114   1      //      __Middleware_Send_ReceiveBuffer[sendBufferLen++] = DeviceInfo_DeviceDataSerialNo /10000 % 10 + '0';
+ 115   1      //      
+ 116   1      //      __Middleware_Send_ReceiveBuffer[sendBufferLen++] = DeviceInfo_DeviceDataSerialNo /1000 % 10 + '0';
+ 117   1      //      
+ 118   1      //      __Middleware_Send_ReceiveBuffer[sendBufferLen++] = DeviceInfo_DeviceDataSerialNo /100 % 10 + '0';
+ 119   1      //      
+ 120   1      //      __Middleware_Send_ReceiveBuffer[sendBufferLen++] = DeviceInfo_DeviceDataSerialNo /10 % 10 + '0';
+ 121   1      //      
+ 122   1      //      __Middleware_Send_ReceiveBuffer[sendBufferLen++] = DeviceInfo_DeviceDataSerialNo % 10 + '0';
+ 123   1      //      
+ 124   1      //      DeviceInfo_DeviceDataSerialNo++;
+ 125   1      //      
+ 126   1      //      // 准备装载数据
+ 127   1      //      //
+ 128   1      //      memcpy(__Middleware_Send_ReceiveBuffer + sendBufferLen, "\",\"ds\":[", 8); sendBufferLen += 8;
+ 129   1      //      
+ 130   1      //      // 装载数据
+ 131   1      //      //
+ 132   1      //      while (tmpData = MiddlewareData_Fetch(MiddlewareData_PollData))
+ 133   1      //      {
+ 134   1      //              memcpy(__Middleware_Send_ReceiveBuffer + sendBufferLen, "{\"dc\":\"", 7); sendBufferLen += 7;
+ 135   1      //              
+ 136   1      //              for (i = 0; i < 32; ++i)
+ 137   1      //              {
+ 138   1      //                      __Middleware_Send_ReceiveBuffer[sendBufferLen++] = __Middleware_WordArray[tmpData[i] >> 4];
+ 139   1      //                      
+ 140   1      //                      __Middleware_Send_ReceiveBuffer[sendBufferLen++] = __Middleware_WordArray[tmpData[i] & 0x0F];
+ 141   1      //              }
+ 142   1      //              __Middleware_Send_ReceiveBuffer[sendBufferLen++] = '\"';
+ 143   1      //              __Middleware_Send_ReceiveBuffer[sendBufferLen++] = '}';
+ 144   1      //              __Middleware_Send_ReceiveBuffer[sendBufferLen++] = ',';
+ 145   1      //              
+ 146   1      //              MiddlewareData_Free(MiddlewareData_PollData); OneCardDataUpload_SerialQuality++;        // 统计的数量在删除区
+             -间指令中使用
+ 147   1      //      }
+ 148   1      //      // 去掉逗号
+ 149   1      //      //
+ 150   1      //      --sendBufferLen;
+ 151   1      //      
+ 152   1      //      // 加入剩余字符
+ 153   1      //      //
+ 154   1      //      __Middleware_Send_ReceiveBuffer[sendBufferLen++] = ']';
+ 155   1      //      __Middleware_Send_ReceiveBuffer[sendBufferLen++] = '}';
+ 156   1      //      
+ 157   1      //      // 长度
+ 158   1      //      //
+ 159   1      //      __Middleware_Send_ReceiveBuffer[2] = (sendBufferLen - 8) >> 8;
+ 160   1      //      
+ 161   1      //      __Middleware_Send_ReceiveBuffer[3] = (sendBufferLen - 8);
+ 162   1      //      
+ 163   1      //      // 正式发送数据
+ 164   1      //      //
+ 165   1      //      Ch395_Write(peerSockfd, __Middleware_Send_ReceiveBuffer, sendBufferLen);
+ 166   1      }
+ 167          
+ 168          
+ 169          void __SendUrgencyDataToPC(void)
+ 170          {
+ 171   1              switch (Middleware_Get_SlowAckCmdNo)
+C51 COMPILER V9.54   MIDDLEWARE                                                            01/10/2017 18:08:20 PAGE 4   
+
+ 172   1              {
+ 173   2                      case 10:                        // 配置设备参数
+ 174   2                              DeviceUniversalCommand_SendFrameTextToPc(Middleware_Get_SlowAckSerialNo,
+ 175   2                                                                                                              __Middleware_Send_ReceiveBuffer);
+ 176   2                              printf("DeviceUniversalCommand_SendFrameTextToPc\r\n");
+ 177   2                              break;
+ 178   2                      
+ 179   2                      default:
+ 180   2                              break;
+ 181   2              }
+ 182   1      }
+ 183          
+ 184          
+ 185          void __SendNormalDataToPC(void)
+ 186          {
+ 187   1              switch (Middleware_Get_SlowAckCmdNo)
+ 188   1              {
+ 189   2                      case 8:                         // 配置设备参数
+ 190   2                              DeviceParameter_SendFrameTextToPc(Middleware_Get_SlowAckSerialNo,
+ 191   2                                                                                                __Middleware_Send_ReceiveBuffer);
+ 192   2                              printf("DeviceParameter_SendFrameTextToPc\r\n");
+ 193   2                              break;
+ 194   2                      
+ 195   2                      case 11:                        // 初始化，添加，删除，更新白名单
+ 196   2                              DeviceWhiteList_SendFrameTextToPc(Middleware_Get_SlowAckSerialNo,
+ 197   2                                                                                                __Middleware_Send_ReceiveBuffer);
+ 198   2                              printf("DeviceWhiteList_SendFrameTextToPc\r\n");
+ 199   2                              break;
+ 200   2                      
+ 201   2                      default:
+ 202   2                              break;
+ 203   2              }
+ 204   1      }
+ 205          
+ 206          
+ 207          void Middleware_Init(void)
+ 208          {
+ 209   1              Middleware_Clear_Shakehand();                           // 清空握手标记
+ 210   1              
+ 211   1              Middleware_Clear_FastAck();                                     // 清空快速回包标记
+ 212   1              
+ 213   1              Middleware_ClearError_FastAck();                        // 清空快速回包中错误标记
+ 214   1              
+ 215   1              MiddlewareData_Init();                                          // 初始化动态分配内存
+ 216   1      }
+ 217          
+ 218          
+ 219          // 停止轮询，设置握手为未完成，自动重连
+ 220          //
+ 221          void Middleware_DealAbort(void)
+ 222          {
+ 223   1      //      PC_DisconnectToPc();
+ 224   1      //                      
+ 225   1      //      Middleware_Init();
+ 226   1      //      
+ 227   1      //      PC_ConnectToPc();
+ 228   1      }
+ 229          
+ 230          
+ 231          // 如果没有成功握手，那么就发送握手包
+ 232          //
+ 233          void Middleware_SendShakehand(void)
+C51 COMPILER V9.54   MIDDLEWARE                                                            01/10/2017 18:08:20 PAGE 5   
+
+ 234          {
+ 235   1              // 组装握手包
+ 236   1              //
+ 237   1      //      Websocket_SendShakehand(peerAddr.ip, peerAddr.port, 
+ 238   1      //                                      __Middleware_Send_ReceiveBuffer, 
+ 239   1      //                                      &__Middleware_Send_ReceiveBufferLen);
+ 240   1      //      
+ 241   1      //      // 发送握手包
+ 242   1      //      //
+ 243   1      //      Ch395_Write(peerSockfd, 
+ 244   1      //                      __Middleware_Send_ReceiveBuffer, 
+ 245   1      //                      __Middleware_Send_ReceiveBufferLen);
+ 246   1      }
+ 247          
+ 248          
+ 249          // 处理发送网络数据逻辑
+ 250          //
+ 251          void Middleware_SendDataToPC(void)
+ 252          {
+ 253   1      //      static uint8_t  pollDataUpload = 0;
+ 254   1      //      
+ 255   1      //      // 检查是否发送快速应答包（控制器接收到服务器的指令，告诉服务器该指令已经成功接收）
+ 256   1      //      //
+ 257   1      //      if (Middleware_Get_FastAck())
+ 258   1      //      {
+ 259   1      //              PWR_YELLOW = LED_ON;
+ 260   1      //              
+ 261   1      //              Middleware_Clear_FastAck();
+ 262   1      //              
+ 263   1      //              __Middleware_FastAck();
+ 264   1      //              
+ 265   1      //              PWR_YELLOW = LED_OFF;
+ 266   1      //      }
+ 267   1      //      
+ 268   1      //      // OneCardDataUpload_PollDeviceStatus == 2表示读取脱机数据完毕
+ 269   1      //      // ++pollDataUpload > 10 && OneCardDataUpload_PollDeviceStatus == 0表示可能有实时数据
+ 270   1      //      //
+ 271   1      //      if (OneCardDataUpload_PollDeviceStatus == 2 || 
+ 272   1      //              (++pollDataUpload > 10 && OneCardDataUpload_PollDeviceStatus == 0))
+ 273   1      //      {
+ 274   1      //              pollDataUpload = 0;
+ 275   1      //              
+ 276   1      //              // 有轮询数据需要上报给服务器
+ 277   1      //              //
+ 278   1      //              if (!MiddlewareData_IsEmpty(MiddlewareData_PollData))
+ 279   1      //              {
+ 280   1      //                      PWR_YELLOW = LED_ON;
+ 281   1      //                      
+ 282   1      //                      __Middleware_SendPollDataToPC();
+ 283   1      //                      
+ 284   1      //                      OneCardDataUpload_PollDeviceStatus = 3;
+ 285   1      //                      
+ 286   1      //                      OneCardDataUpload_RecoverCount = OneCardDataUpload_RecoverCount_Init;
+ 287   1      //                      
+ 288   1      //                      printf("upload\r\n");
+ 289   1      //                      
+ 290   1      //                      PWR_YELLOW = LED_OFF;
+ 291   1      //              }
+ 292   1      //              // 没有轮询数据需要上报给服务器
+ 293   1      //              //
+ 294   1      //              else
+ 295   1      //              {
+C51 COMPILER V9.54   MIDDLEWARE                                                            01/10/2017 18:08:20 PAGE 6   
+
+ 296   1      //                      OneCardDataUpload_PollDeviceStatus = 0;
+ 297   1      //              }
+ 298   1      //      }
+ 299   1      //      
+ 300   1      //      // 紧急指令执行的应答包
+ 301   1      //      //
+ 302   1      //      if (MiddlewareData_IsEmpty(MiddlewareData_SendDataUrgency) &&
+ 303   1      //              !MiddlewareData_IsEmpty(MiddlewareData_ReceiveDataUrgency))
+ 304   1      //      {
+ 305   1      //              PWR_YELLOW = LED_ON;
+ 306   1      //              
+ 307   1      //              __SendUrgencyDataToPC();
+ 308   1      //              
+ 309   1      //              PWR_YELLOW = LED_OFF;
+ 310   1      //      }
+ 311   1      //      // 普通指令执行的应答包
+ 312   1      //      //
+ 313   1      //      else if (MiddlewareData_IsEmpty(MiddlewareData_SendDataNormal) &&
+ 314   1      //                       !MiddlewareData_IsEmpty(MiddlewareData_ReceiveDataNormal))
+ 315   1      //      {
+ 316   1      //              PWR_YELLOW = LED_ON;
+ 317   1      //              
+ 318   1      //              __SendNormalDataToPC();
+ 319   1      //              
+ 320   1      //              PWR_YELLOW = LED_OFF;
+ 321   1      //      }
+ 322   1      //      // 检查是否需要发送心跳数据
+ 323   1      //      //
+ 324   1      //      else if (ControlerInfo_Get_HeartbeatSignal())
+ 325   1      //      {
+ 326   1      //              PWR_YELLOW = LED_ON;
+ 327   1      //              
+ 328   1      //              ControlerInfo_Clear_HeartbeatSignal();
+ 329   1      //              
+ 330   1      //              ControllerHeartbeat_SendFrameTextToPc(__Middleware_Send_ReceiveBuffer);
+ 331   1      //              
+ 332   1      //              PWR_YELLOW = LED_OFF;
+ 333   1      //      }
+ 334   1      }
+ 335          
+ 336          
+ 337          // 处理接收网络数据逻辑
+ 338          //
+ 339          void Middleware_ReceiveDataFromPC(void)
+ 340          {
+ 341   1              // 如果没有获取到服务器数据，那么就立即返回
+ 342   1              //
+ 343   1      //      if ((__Middleware_Send_ReceiveBufferLen = Ch395_Read(peerSockfd, 
+ 344   1      //                                                                                                      __Middleware_Send_ReceiveBuffer, 1000)) == 0)
+ 345   1      //      {
+ 346   1      //              return;
+ 347   1      //      }
+ 348   1      //      
+ 349   1      //      printf("fuqiyang\r\n");
+ 350   1      //      
+ 351   1      //      // 如还没完成握手，那么处理握手包
+ 352   1      //      //
+ 353   1      //      if (!Middleware_Get_Shakehand())
+ 354   1      //      {
+ 355   1      //              if (Websocket_ReceiveShakehand(__Middleware_Send_ReceiveBuffer,
+ 356   1      //                                                                      __Middleware_Send_ReceiveBufferLen))
+ 357   1      //              {       
+C51 COMPILER V9.54   MIDDLEWARE                                                            01/10/2017 18:08:20 PAGE 7   
+
+ 358   1      //                      Middleware_Set_Shakehand();
+ 359   1      //              }
+ 360   1      //      }
+ 361   1      //      // 已经完成握手， 那么处理数据包
+ 362   1      //      //
+ 363   1      //      else
+ 364   1      //      {
+ 365   1      //              uint8_t *tmpAnalyse;                                            // 这个变量指向字符串正在处理的位置， 不用每次都从头处理
+ 366   1      //              
+ 367   1      //              PWR_YELLOW = LED_ON;                                                    // 亮黄灯， 下面灭黄灯
+ 368   1      //              
+ 369   1      //              // 去掉websocket的帧头， 遇到不合法的websocket数据， 返回0
+ 370   1      //              //
+ 371   1      //              if (Websocket_ReceiveFrameText(__Middleware_Send_ReceiveBuffer, 
+ 372   1      //                                                              __Middleware_Send_ReceiveBufferLen,
+ 373   1      //                                                              &tmpAnalyse) == 0)
+ 374   1      //              {
+ 375   1      //                      PWR_YELLOW = LED_OFF;
+ 376   1      //                      
+ 377   1      //                      return;
+ 378   1      //              }
+ 379   1      //              
+ 380   1      //              // 在末尾添加一个伪零，以便进行字符串处理
+ 381   1      //              //
+ 382   1      //              __Middleware_Send_ReceiveBuffer[__Middleware_Send_ReceiveBufferLen] = 0;
+ 383   1      //              
+ 384   1      //              // 接收指令号
+ 385   1      //              //
+ 386   1      //              if (!Json_ReceiveFrameCharValue(&tmpAnalyse, "cn\":\"", 5, &Middleware_Get_FastAckCmdNo))
+ 387   1      //              {
+ 388   1      //                      PWR_YELLOW = LED_OFF;
+ 389   1      //                      
+ 390   1      //                      return;
+ 391   1      //              }
+ 392   1      //              
+ 393   1      //              // 接收指令流水号
+ 394   1      //              //
+ 395   1      //              if (!Json_ReceiveFrameUintValue(&tmpAnalyse, "csn\":\"", 6, &Middleware_Get_FastAckSerialNo))
+ 396   1      //              {
+ 397   1      //                      PWR_YELLOW = LED_OFF;
+ 398   1      //                      
+ 399   1      //                      return;
+ 400   1      //              }
+ 401   1      //              
+ 402   1      //              // 设置需要快速回包
+ 403   1      //              //
+ 404   1      //              Middleware_Set_FastAck();
+ 405   1      //              
+ 406   1      //              // 对各个指令分别处理
+ 407   1      //              //
+ 408   1      //              switch (Middleware_Get_FastAckCmdNo)
+ 409   1      //              {
+ 410   1      //                      case 1:                                 // 控制器参数配置
+ 411   1      //                              if (!ControllerParameter_DealFrameText(&tmpAnalyse))
+ 412   1      //                              {
+ 413   1      //                                      Middleware_SetError_FastAck();
+ 414   1      //                              }
+ 415   1      //                              printf("controller parameter\r\n");
+ 416   1      //                              break;
+ 417   1      //                      
+ 418   1      //                      case 2:                                 // 控制器状态查询（暂时没有）
+ 419   1      //                              break;
+C51 COMPILER V9.54   MIDDLEWARE                                                            01/10/2017 18:08:20 PAGE 8   
+
+ 420   1      //                      
+ 421   1      //                      case 3:                                 // 控制器设备列表配置
+ 422   1      //                              if (!ControllerDeviceList_DealFrameText(&tmpAnalyse))
+ 423   1      //                              {
+ 424   1      //                                      Middleware_SetError_FastAck();
+ 425   1      //                              }
+ 426   1      //                              printf("device list\r\n");
+ 427   1      //                              break;
+ 428   1      //                      
+ 429   1      //                      case 4:                                 // 心跳包(不需要回复)
+ 430   1      //                              ControllerHeartbeat_DealFrameText(&tmpAnalyse);
+ 431   1      //                              Middleware_Clear_FastAck();
+ 432   1      //                              break;
+ 433   1      //                      
+ 434   1      //                      case 5:                                 // 中继器参数配置(暂时没有)
+ 435   1      //                              break;
+ 436   1      //                      
+ 437   1      //                      case 6:                                 // 中继器通讯测试(暂时没有)
+ 438   1      //                              break;
+ 439   1      //                      
+ 440   1      //                      case 7:                                 // 轮询数据上报应答
+ 441   1      //                              OneCardDataUpload_PollDeviceStatus = 4;
+ 442   1      //                              Middleware_Clear_FastAck();
+ 443   1      //                              printf("upload ack\r\n");
+ 444   1      //                              break;
+ 445   1      //                      
+ 446   1      //                      case 8:                                 // 设备参数配置
+ 447   1      //                              if (!DeviceParameter_DealFrameText(&tmpAnalyse))
+ 448   1      //                              {
+ 449   1      //                                      Middleware_SetError_FastAck();
+ 450   1      //                              }
+ 451   1      //                              Middleware_Set_SlowAckCmdNo(Middleware_Get_FastAckCmdNo);
+ 452   1      //                              Middleware_Set_SlowAckSerialNo(Middleware_Get_FastAckSerialNo);
+ 453   1      //                              printf("device parameter\r\n");
+ 454   1      //                              break;
+ 455   1      //                      
+ 456   1      //                      case 10:                                // 通用设备指令
+ 457   1      //                              if (!DeviceUniversalCommand_DealFrameText(&tmpAnalyse))
+ 458   1      //                              {
+ 459   1      //                                      Middleware_SetError_FastAck();
+ 460   1      //                              }
+ 461   1      //                              Middleware_Set_SlowAckCmdNo(Middleware_Get_FastAckCmdNo);
+ 462   1      //                              Middleware_Set_SlowAckSerialNo(Middleware_Get_FastAckSerialNo);
+ 463   1      //                              printf("universal command\r\n");
+ 464   1      //                              break;
+ 465   1      //                      
+ 466   1      //                      case 11:                                // 名单上传
+ 467   1      //                              if (!DeviceWhiteList_DealFrameText(&tmpAnalyse))
+ 468   1      //                              {
+ 469   1      //                                      Middleware_SetError_FastAck();
+ 470   1      //                              }
+ 471   1      //                              Middleware_Set_SlowAckCmdNo(Middleware_Get_FastAckCmdNo);
+ 472   1      //                              Middleware_Set_SlowAckSerialNo(Middleware_Get_FastAckSerialNo);
+ 473   1      //                              printf("white list\r\n");
+ 474   1      //                              break;
+ 475   1      //                              
+ 476   1      //                      case 12:                                // 数据重采
+ 477   1      //                              if (!DeviceDataRecollect_DealFrameText(&tmpAnalyse))
+ 478   1      //                              {
+ 479   1      //                                      Middleware_SetError_FastAck();
+ 480   1      //                              }
+ 481   1      //                              Middleware_Set_SlowAckCmdNo(Middleware_Get_FastAckCmdNo);
+C51 COMPILER V9.54   MIDDLEWARE                                                            01/10/2017 18:08:20 PAGE 9   
+
+ 482   1      //                              Middleware_Set_SlowAckSerialNo(Middleware_Get_FastAckSerialNo);
+ 483   1      //                              printf("data recollect\r\n");
+ 484   1      //                              break;
+ 485   1      //                      
+ 486   1      //                      default:
+ 487   1      //                              Middleware_SetError_FastAck();
+ 488   1      //                              break;
+ 489   1      //              }
+ 490   1      //              PWR_YELLOW = LED_OFF;
+ 491   1      //      }
+ 492   1      }
+ 493          
+ 494          
+ 495          
+ 496          // 发送无线紧急数据
+ 497          //
+ 498          void Middleware_SendUrgencyDataToDevice(void)
+ 499          {
+ 500   1              uint8_t *tmp = MiddlewareData_Fetch(MiddlewareData_SendDataUrgency);
+ 501   1              
+ 502   1              if (tmp)
+ 503   1              {
+ 504   2                      // 发送轮询指令
+ 505   2                      //
+ 506   2      //              Wireless_SendDataToDevice(tmp);
+ 507   2                      
+ 508   2      //              printf("1deviceNo: %x, %x\r\n", (uint)tmp[0], (uint)tmp[1]);
+ 509   2      //              
+ 510   2      //              printf("1deviceType: %u\r\n", (uint)tmp[19]);
+ 511   2      //              
+ 512   2      //              printf("1cmdNo: %u\r\n", (uint)tmp[2]);
+ 513   2      
+ 514   2                      // 根据中继来设置无线发送等待超时时间
+ 515   2                      //
+ 516   2                      Pca_Start(tmp, 0);
+ 517   2              }
+ 518   1      }
+ 519          
+ 520          
+ 521          // 发送无线普通数据
+ 522          //
+ 523          void Middleware_SendNormalDataToDevice(void)
+ 524          {
+ 525   1              uint8_t *tmp = MiddlewareData_Fetch(MiddlewareData_SendDataNormal);
+ 526   1              
+ 527   1              if (tmp)
+ 528   1              {
+ 529   2                      // 发送轮询指令
+ 530   2                      //
+ 531   2      //              Wireless_SendDataToDevice(tmp);
+ 532   2                      
+ 533   2      //              printf("2cmdNo: %u\r\n", (uint)tmp[2]);
+ 534   2                      
+ 535   2                      // 根据中继来设置无线发送等待超时时间
+ 536   2                      //
+ 537   2                      Pca_Start(tmp, 0);
+ 538   2              }
+ 539   1      }
+ 540          
+ 541          
+ 542          
+ 543          
+C51 COMPILER V9.54   MIDDLEWARE                                                            01/10/2017 18:08:20 PAGE 10  
+
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    153    ----
+   CONSTANT SIZE    =    132    ----
+   XDATA SIZE       =    610    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

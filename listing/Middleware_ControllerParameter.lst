@@ -1,0 +1,75 @@
+C51 COMPILER V9.54   MIDDLEWARE_CONTROLLERPARAMETER                                        01/10/2017 18:08:21 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE MIDDLEWARE_CONTROLLERPARAMETER
+OBJECT MODULE PLACED IN ..\output\Middleware_ControllerParameter.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\MiddlewareWesocket\Middleware_ControllerParameter.c LARGE OP
+                    -TIMIZE(8,SPEED) BROWSE INCDIR(.\HeadFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Comm
+                    -and_Conter;.\HeadFile\App\Command_DataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile
+                    -\App\Command_WhiteList;.\HeadFile\App\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareWesocket) DEBUG
+                    - OBJECTEXTEND PRINT(..\listing\Middleware_ControllerParameter.lst) OBJECT(..\output\Middleware_ControllerParameter.obj)
+
+line level    source
+
+   1          #include "Middleware_ControllerParameter.h"
+   2          
+   3          
+   4          bool ControllerParameter_DealFrameText(uint8_t **Data)
+   5          {
+   6   1              uint8_t tmpWirelessChannel;
+   7   1              
+   8   1              uint8_t tmpHeartbeatInterval;
+   9   1              
+  10   1              if (!Json_ReceiveFrameCharValue(Data, "nwc\":\"", 6, &tmpWirelessChannel))
+  11   1              {
+  12   2                      return 0;
+  13   2              }
+  14   1              
+  15   1              if (!Json_ReceiveFrameCharValue(Data, "nhi\":\"", 6, &tmpHeartbeatInterval))
+  16   1              {
+  17   2                      return 0;
+  18   2              }
+  19   1              
+  20   1              // 修改无线信道
+  21   1              //
+  22   1              PWR_UP = 0; PWR_UP = 0;
+  23   1              
+  24   1      //      WirelessChannel = tmpWirelessChannel;
+  25   1              
+  26   1      //      NRF905_SetWireLess(); os_send_signal(THREAD_BEEP);
+  27   1              
+  28   1              // 修改心跳间隔
+  29   1              //
+  30   1      //      ControlerInfo_Set_HeartbeatIntervalReload(tmpHeartbeatInterval);
+  31   1              
+  32   1              //门锁数据采集星期
+  33   1              //
+  34   1              
+  35   1              // 门锁采集开始时间
+  36   1              //
+  37   1              
+  38   1              // 门锁采集时间间隔
+  39   1              //
+  40   1              
+  41   1              return 1;
+  42   1      }
+  43          
+  44          
+  45          
+  46          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    100    ----
+   CONSTANT SIZE    =     14    ----
+C51 COMPILER V9.54   MIDDLEWARE_CONTROLLERPARAMETER                                        01/10/2017 18:08:21 PAGE 2   
+
+   XDATA SIZE       =   ----       5
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

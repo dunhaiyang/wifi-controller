@@ -1,0 +1,165 @@
+C51 COMPILER V9.54   COMMAND_CONTROLERDEVICELIST                                           01/18/2017 12:57:28 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE COMMAND_CONTROLERDEVICELIST
+OBJECT MODULE PLACED IN ..\output\Command_ControlerDeviceList.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\App\Command_Conter\Command_ControlerDeviceList.c LARGE OPTIM
+                    -IZE(8,SPEED) BROWSE INCDIR(.\HeadFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Command
+                    -_Conter;.\HeadFile\App\Command_DataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile\Ap
+                    -p\Command_WhiteList;.\HeadFile\App\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareMenu;.\HeadFile\Mi
+                    -ddlewareTask;.\HeadFile\MiddlewareWireless;.\HeadFile\MiddlewareSocket;.\HeadFile\MiddlewareWesocket) DEBUG OBJECTEXTEND
+                    - PRINT(..\listing\Command_ControlerDeviceList.lst) OBJECT(..\output\Command_ControlerDeviceList.obj)
+
+line level    source
+
+   1          #include "Command_ControlerDeviceList.h"
+   2          
+   3          
+   4          void ControlerDeviceList_DealData(uint8_t *Data)
+   5          {
+   6   1          bool   tmpSuccess = 1;
+   7   1          
+   8   1          uint8_t i;
+   9   1          
+  10   1          uint8_t tmpSerialNo = Data[1];
+  11   1          
+  12   1          
+  13   1          // 模式： 0x31->添加， 0x32->删除， 0x33->覆盖
+  14   1          //
+  15   1          uint8_t operateMode = Data[Enum_CommandContent + 0];
+  16   1          
+  17   1          
+  18   1          // 获取设备数量
+  19   1          //
+  20   1          uint8_t deviceQuantity = Data[Enum_CommandContent + 1];
+  21   1          
+  22   1          
+  23   1          // 获取设备列表数据
+  24   1          //
+  25   1          switch (operateMode)
+  26   1          {
+  27   2              // 覆盖普通设备列表模式
+  28   2              //
+  29   2              case 0x33:
+  30   2                  NormalDeviceInfo_EmptyDeviceList();      // 注意，这里没有break
+  31   2              
+  32   2              
+  33   2              // 增加普通设备列表模式
+  34   2              //
+  35   2              case 0x31:
+  36   2                  // 没有足够的空间存储设备列表数据
+  37   2                  //
+  38   2                  if (NormalDeviceInfo_HowManySpace() < deviceQuantity)
+  39   2                  {
+  40   3                      tmpSuccess = 0;
+  41   3                      
+  42   3                      break;
+  43   3                  }
+  44   2                  // 添加所有设备列表数据
+  45   2                  //
+  46   2                  for (i = Enum_CommandContent + 2; deviceQuantity > 0; i += 9)
+  47   2                  {
+  48   3                      NormalDeviceInfo_AddDeviceList(Data + i);
+  49   3                      
+  50   3                      --deviceQuantity;
+C51 COMPILER V9.54   COMMAND_CONTROLERDEVICELIST                                           01/18/2017 12:57:28 PAGE 2   
+
+  51   3                  }
+  52   2                  break;
+  53   2                  
+  54   2              
+  55   2              // 删除普通设备列表模式
+  56   2              //
+  57   2              case 0x32:
+  58   2                  for (i = Enum_CommandContent + 2; deviceQuantity > 0; i += 9)
+  59   2                  {
+  60   3                      NormalDeviceInfo_DeleteDeviceList(Data + i);
+  61   3                      
+  62   3                      --deviceQuantity;
+  63   3                  }
+  64   2                  break;
+  65   2                  
+  66   2                  
+  67   2              // 覆盖门锁特殊设备列表模式
+  68   2              //
+  69   2              case 0x36:
+  70   2                  SpecialDeviceInfo_EmptyDeviceList();
+  71   2                  
+  72   2              
+  73   2              // 增加门锁特殊设备列表模式
+  74   2              //
+  75   2              case 0x34:
+  76   2                              // 没有足够的空间存储设备列表数据
+  77   2                  //
+  78   2                  if (SpecialDeviceInfo_HowManySpace() < deviceQuantity)
+  79   2                  {
+  80   3                      tmpSuccess = 0;
+  81   3                      
+  82   3                      break;
+  83   3                  }
+  84   2                  // 添加所有设备列表数据
+  85   2                  //
+  86   2                  for (i = Enum_CommandContent + 2; deviceQuantity > 0; i += 9)
+  87   2                  {
+  88   3                      SpecialDeviceInfo_AddDeviceList(Data + i);
+  89   3                      
+  90   3                      --deviceQuantity;
+  91   3                  }
+  92   2                  break;
+  93   2              
+  94   2              // 删除门锁特殊设备列表模式
+  95   2              //
+  96   2              case 0x35:
+  97   2                  for (i = Enum_CommandContent + 2; deviceQuantity > 0; i += 9)
+  98   2                  {
+  99   3                      SpecialDeviceInfo_DeleteDeviceList(Data + i);
+ 100   3                      
+ 101   3                      --deviceQuantity;
+ 102   3                  }
+ 103   2                  break;
+ 104   2              
+ 105   2              default:            // 不能存在的模式
+ 106   2                  tmpSuccess = 0;
+ 107   2                  break;
+ 108   2          }
+ 109   1          
+ 110   1          // 设置应答包数据
+ 111   1          //
+ 112   1          if (operateMode >= 0x34)
+C51 COMPILER V9.54   COMMAND_CONTROLERDEVICELIST                                           01/18/2017 12:57:28 PAGE 3   
+
+ 113   1          {
+ 114   2              SocketData_SendBuffer[0] = SpecialDeviceInfo_HowManySpace();
+ 115   2          }
+ 116   1          else
+ 117   1          {
+ 118   2              SocketData_SendBuffer[0] = NormalDeviceInfo_HowManySpace();
+ 119   2          }
+ 120   1          SocketData_SendBuffer[1] = tmpSuccess? 0x31:0x32;
+ 121   1          
+ 122   1          // 发送给PC, Data是完整的数据包：命令号+命令流水号+命令内容长度+命令内容+异或校验
+ 123   1          //
+ 124   1          PC_SendCommand(0x70, tmpSerialNo, SocketData_SendBuffer, 2);
+ 125   1      }
+ 126          
+ 127          
+ 128          
+ 129          
+ 130          
+ 131          
+ 132          
+ 133          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    428    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----       7
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----       1
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,278 @@
+C51 COMPILER V9.54   UART2                                                                 01/18/2017 12:41:11 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE UART2
+OBJECT MODULE PLACED IN ..\output\Uart2.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\Arch\Uart2.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(.\HeadFil
+                    -e\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Command_Conter;.\HeadFile\App\Command_DataS
+                    -tructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile\App\Command_WhiteList;.\HeadFile\App\C
+                    -ommand_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareMenu;.\HeadFile\MiddlewareTask;.\HeadFile\MiddlewareWi
+                    -reless;.\HeadFile\MiddlewareSocket;.\HeadFile\MiddlewareWesocket) DEBUG OBJECTEXTEND PRINT(..\listing\Uart2.lst) OBJECT(
+                    -..\output\Uart2.obj)
+
+line level    source
+
+   1          #include "Uart2.h"
+   2          #include "Uart1.h"
+   3          
+   4          
+   5          #define         UART2_RXMAX                     512
+   6          
+   7          bool            Uart2_RxMode = 0;                                                                       // wifi”–¡Ω÷÷ ˝æ›£∫0 -> Õ∏¥´Ω” ’ ˝æ›£¨ 1 -> ÷∏¡ÓΩ” ’ ˝æ›
+   8          
+   9          uint8_t         Uart2_RxBuf[UART2_RXMAX];                                                       // wifi ˝æ›ª∫¥Ê«¯
+  10          
+  11          uint16_t        Uart2_Count = 0;                                                                        // Ω” ’ ˝æ›≥§∂»
+  12          
+  13          bool        UartPack_ReciveCmdOk = 0;                                                   // Ω” ’√¸¡Ó’˝»∑±Í÷æ
+  14          
+  15          bool            UartPack_0x10Received = 0;                                              //  «∑Ò“—æ≠Ω” ’µΩ¡À0x10
+  16          
+  17          bool            UartPack_Started = 0;                                                           // Õ®—∂∞¸ «∑Ò“—æ≠ø™ º
+  18          
+  19          
+  20          void Uart2_Init(void)
+  21          {
+  22   1      // 115200
+  23   1      //
+  24   1              S2CON = 0x50;                                                                                           // 8Œª ˝æ›,ø…±‰≤®Ãÿ¬ 
+  25   1              
+  26   1              AUXR |= 0x04;                                                                                           // ∂® ±∆˜2 ±÷”Œ™Fosc,º¥1T
+  27   1               
+  28   1              T2L = 0xD0;                                                                                                     // …Ë∂®∂® ±≥ı÷µ
+  29   1              
+  30   1              T2H = 0xFF;                                                                                                     // …Ë∂®∂® ±≥ı÷µ
+  31   1              
+  32   1              AUXR |= 0x10;                                                                                           // ∆Ù∂Ø∂® ±∆˜2
+  33   1      
+  34   1      // 230400
+  35   1      //
+  36   1      //      S2CON = 0x50;                                                                                           // 8Œª ˝æ›,ø…±‰≤®Ãÿ¬ 
+  37   1      //      
+  38   1      //      AUXR |= 0x04;                                                                                           // ∂® ±∆˜2 ±÷”Œ™Fosc,º¥1T
+  39   1      //      
+  40   1      //      T2L = 0xE8;                                                                                                     // …Ë∂®∂® ±≥ı÷µ
+  41   1      //      
+  42   1      //      T2H = 0xFF;                                                                                                     // …Ë∂®∂® ±≥ı÷µ
+  43   1      //      
+  44   1      //      AUXR |= 0x10;                                                                                           // ∆Ù∂Ø∂® ±∆˜2
+  45   1      
+  46   1      //
+  47   1              IE2     = 0x01;                                                                                                 // ‘ –Ì¥Æø⁄2÷–∂œ,ES2=1
+  48   1      }
+  49          
+  50          
+C51 COMPILER V9.54   UART2                                                                 01/18/2017 12:41:11 PAGE 2   
+
+  51          #define S2TI    0x02
+  52          #define S2RI    0x01
+  53          
+  54          
+  55          bool Uart2_Busy = 0;
+  56          
+  57          
+  58          void Uart2_Interrupt(void) interrupt 8
+  59          {
+  60   1              static uint8_t recived_data = 0;
+  61   1              
+  62   1              // ∂¡»°
+  63   1              //
+  64   1          if(S2CON & S2RI)
+  65   1          {
+  66   2                      S2CON &= ~S2RI;
+  67   2                      
+  68   2                      recived_data = S2BUF;
+  69   2                      
+  70   2                      // wifi÷∏¡ÓΩ” ’ ˝æ›
+  71   2                      //
+  72   2                      if (Uart2_RxMode)
+  73   2                      {
+  74   3                              if (Uart2_Count < UART2_RXMAX)
+  75   3                              {
+  76   4                                      Uart2_RxBuf[Uart2_Count++] = recived_data;
+  77   4                              
+  78   4      //                              Uart1_SendByte('#');
+  79   4                              }
+  80   3                      }
+  81   2                      // wifiÕ∏¥´Ω” ’ ˝æ›
+  82   2                      //
+  83   2                      else
+  84   2                      {
+  85   3                              if (UartPack_ReciveCmdOk)
+  86   3                              {
+  87   4                                      UartPack_Started = 0;
+  88   4                              
+  89   4      //                              Uart1_SendByte('@');
+  90   4                                      
+  91   4                                      return;
+  92   4                              }
+  93   3                                      
+  94   3                              // »Áπ˚ «0x02, ≤¢«“«∞√Ê√ª”–◊™“Â◊÷∑˚0x10
+  95   3                              //
+  96   3                              if( (0x02 == recived_data) && (0 == UartPack_0x10Received) )    //Ω” ’µΩø™ º±Í÷æ
+  97   3                              {
+  98   4                                      UartPack_Started = 1;
+  99   4                                      
+ 100   4                                      Uart2_Count = 0;
+ 101   4                                      
+ 102   4      //                              Uart1_SendByte('S');
+ 103   4                              }
+ 104   3                              // »Áπ˚ «0x03, ≤¢«“«∞√Ê√ª”–◊™“Â◊÷∑˚0x10
+ 105   3                              //
+ 106   3                              else if ((0x03 == recived_data) && (0 == UartPack_0x10Received) && (UartPack_Started))          //Ω” ’µΩΩ· ¯±Í÷
+             -æ
+ 107   3                              {
+ 108   4                                      // ≥…π¶Ω” ’“ª∏ˆÕÍ’˚µƒ ˝æ›∞¸
+ 109   4                                      //
+ 110   4                                      UartPack_Started = 0;
+ 111   4                                      
+C51 COMPILER V9.54   UART2                                                                 01/18/2017 12:41:11 PAGE 3   
+
+ 112   4                                      UartPack_0x10Received = 0;
+ 113   4                                      
+ 114   4                                      UartPack_ReciveCmdOk = 1;
+ 115   4                                      
+ 116   4      //                              Uart1_SendByte('E');
+ 117   4                              }
+ 118   3                              // »Áπ˚ «0x10, ≤¢«“«∞√Ê√ª”–◊™“Â◊÷∑˚0x10
+ 119   3                              //
+ 120   3                              else if ((0x10 == recived_data) && (0 == UartPack_0x10Received))
+ 121   3                              {
+ 122   4                                      UartPack_0x10Received = 1;
+ 123   4                              }
+ 124   3                              // ∆‰À˚«Èøˆ
+ 125   3                              //
+ 126   3                              else if(UartPack_Started)
+ 127   3                              {
+ 128   4                                      UartPack_0x10Received = 0;
+ 129   4      
+ 130   4                                      if (Uart2_Count < UART2_RXMAX)
+ 131   4                                      {
+ 132   5                                              Uart2_RxBuf[Uart2_Count++] = recived_data;
+ 133   5                                      }
+ 134   4                              }
+ 135   3                              else
+ 136   3                              {
+ 137   4                                      UartPack_0x10Received = 0; 
+ 138   4                                      
+ 139   4      //                              Uart1_SendByte('o');
+ 140   4                              }
+ 141   3                      }
+ 142   2          }
+ 143   1              // –¥»Î
+ 144   1              //
+ 145   1              else if (S2CON & S2TI)
+ 146   1          {
+ 147   2              S2CON &= ~S2TI;
+ 148   2              
+ 149   2              Uart2_Busy = 0;
+ 150   2          }
+ 151   1      }
+ 152          
+ 153          
+ 154          // …Ë÷√Œ™Õ∏¥´ƒ£ Ω
+ 155          //
+ 156          void Uart2_SetMode0(void)
+ 157          {
+ 158   1              Uart2_RxMode = 0;
+ 159   1              
+ 160   1              Uart2_Count = 0;
+ 161   1              
+ 162   1              UartPack_ReciveCmdOk = 0;
+ 163   1              
+ 164   1              UartPack_0x10Received = 0;
+ 165   1              
+ 166   1              UartPack_Started = 0;
+ 167   1      }
+ 168          
+ 169          
+ 170          // …Ë÷√Œ™÷∏¡Óƒ£ Ω
+ 171          //
+ 172          void Uart2_SetMode1(void)
+ 173          {
+C51 COMPILER V9.54   UART2                                                                 01/18/2017 12:41:11 PAGE 4   
+
+ 174   1              Uart2_RxMode = 1;
+ 175   1              
+ 176   1              Uart2_Count = 0;
+ 177   1      }
+ 178          
+ 179          
+ 180          uint16_t Uart2_Mode0_ReceiveString(uint8_t *buffer)
+ 181          {
+ 182   1              static uint16_t tmpCount = 0;
+ 183   1              
+ 184   1              if (UartPack_ReciveCmdOk)
+ 185   1              {
+ 186   2                      memcpy(buffer, Uart2_RxBuf, Uart2_Count);
+ 187   2                      
+ 188   2                      tmpCount = Uart2_Count;
+ 189   2                      
+ 190   2                      Uart2_Count = 0; UartPack_ReciveCmdOk = 0;                              // Õ∏¥´ ˝æ›Ω” ’ÕÍ±œ£¨ƒ«√¥÷ÿ÷√◊¥Ã¨
+ 191   2                      
+ 192   2                      return tmpCount;
+ 193   2              }
+ 194   1              else
+ 195   1              {
+ 196   2                      return 0;
+ 197   2              }
+ 198   1      }
+ 199          
+ 200          
+ 201          uint16_t Uart2_Mode1_ReceiveString(uint8_t **buffer)
+ 202          {
+ 203   1              *buffer = Uart2_RxBuf;
+ 204   1              
+ 205   1              return Uart2_Count;
+ 206   1      }
+ 207          
+ 208          
+ 209          void Uart2_SendByte(uint8_t byte)
+ 210          {
+ 211   1          while (Uart2_Busy)
+ 212   1                      ;
+ 213   1          
+ 214   1          Uart2_Busy = 1;
+ 215   1          
+ 216   1          S2BUF = byte;
+ 217   1      }
+ 218          
+ 219          
+ 220          void Uart2_SendString(uint8_t *string)
+ 221          {
+ 222   1              while (*string)
+ 223   1              {
+ 224   2                      Uart2_SendByte(*string++);
+ 225   2              }
+ 226   1      }
+ 227          
+ 228          
+ 229          void Uart2_SendNString(uint8_t *string, uint8_t count)
+ 230          {
+ 231   1              uint8_t index;
+ 232   1              
+ 233   1              for (index = 0; index < count; index++)
+ 234   1              {
+ 235   2                      Uart2_SendByte(string[index]);
+C51 COMPILER V9.54   UART2                                                                 01/18/2017 12:41:11 PAGE 5   
+
+ 236   2              }
+ 237   1      }
+ 238          
+ 239          
+ 240          
+ 241          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    455    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =    517      12
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      5    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

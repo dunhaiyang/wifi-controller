@@ -1,0 +1,57 @@
+C51 COMPILER V9.54   MIDDLEWARE_WIRELESS                                                   01/18/2017 16:00:08 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE MIDDLEWARE_WIRELESS
+OBJECT MODULE PLACED IN ..\output\Middleware_Wireless.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\MiddlewareWireless\Middleware_Wireless.c LARGE OPTIMIZE(8,SP
+                    -EED) BROWSE INCDIR(.\HeadFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Command_Conter;
+                    -.\HeadFile\App\Command_DataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile\App\Comman
+                    -d_WhiteList;.\HeadFile\App\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareMenu;.\HeadFile\Middleware
+                    -Task;.\HeadFile\MiddlewareWireless;.\HeadFile\MiddlewareSocket;.\HeadFile\MiddlewareWesocket) DEBUG OBJECTEXTEND PRINT(.
+                    -.\listing\Middleware_Wireless.lst) OBJECT(..\output\Middleware_Wireless.obj)
+
+line level    source
+
+   1          #include "Middleware_Wireless.h"
+   2          
+   3          
+   4          
+   5          
+   6          // 接收无线数据任务
+   7          //
+   8          void MiddlewareWireless_FastTask(void)
+   9          {
+  10   1              static uint8_t ReceiveWireless_Command[32];
+  11   1              
+  12   1              if(App_Hal_Api.wireless->avilable())                                                                    // 是否有无线数据
+  13   1              {
+  14   2                      App_Hal_Api.wireless->read(ReceiveWireless_Command);                                                                    // 接收无线数据
+  15   2                      
+  16   2                      if (Wireless_CheckCommand(ReceiveWireless_Command))                                                     // 检查无线数据合法性
+  17   2                      {
+  18   3                              Pca_Stop();                                                                                                                                                     // 释放无线信道
+  19   3                              
+  20   3                              App_Hal_Api.led->setTime(BLUE_LED, 2);                                                                                          // 亮绿灯
+  21   3                              
+  22   3                              Wireless_DealControlData(ReceiveWireless_Command);                                                                      // 处理无线数据
+  23   3                      }
+  24   2              }
+  25   1      }
+  26          
+  27          
+  28          
+  29          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    118    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     32    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

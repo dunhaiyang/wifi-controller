@@ -1,0 +1,169 @@
+C51 COMPILER V9.54   COMMAND_REALTIMECONTROL                                               01/18/2017 12:57:30 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE COMMAND_REALTIMECONTROL
+OBJECT MODULE PLACED IN ..\output\Command_RealtimeControl.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\App\Command_Device\Command_RealtimeControl.c LARGE OPTIMIZE(
+                    -8,SPEED) BROWSE INCDIR(.\HeadFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Command_Con
+                    -ter;.\HeadFile\App\Command_DataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile\App\Co
+                    -mmand_WhiteList;.\HeadFile\App\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareMenu;.\HeadFile\Middle
+                    -wareTask;.\HeadFile\MiddlewareWireless;.\HeadFile\MiddlewareSocket;.\HeadFile\MiddlewareWesocket) DEBUG OBJECTEXTEND PRI
+                    -NT(..\listing\Command_RealtimeControl.lst) OBJECT(..\output\Command_RealtimeControl.obj)
+
+line level    source
+
+   1          #include "Command_RealtimeControl.h"
+   2          
+   3          
+   4          uint8_t RealtimeControl_DeviceType = 0xFF;
+   5          
+   6          void RealtimeControl_DealData(uint8_t *Data)
+   7          {
+   8   1          uint8_t tmpCommandNo        = Data[0];
+   9   1          
+  10   1          uint8_t tmpCommandSerialNo  = Data[1];
+  11   1          
+  12   1          uint8_t tmpDeviceNoL        = Data[3];
+  13   1          
+  14   1          uint8_t tmpDeviceNoH        = Data[4];
+  15   1          
+  16   1          uint8_t tmpDeviceType       = Data[5];
+  17   1          
+  18   1          uint8_t tmpRepeater1        = Data[6];
+  19   1          
+  20   1          uint8_t tmpRepeater2        = Data[7];
+  21   1          
+  22   1          uint8_t tmpRepeater3        = Data[8];
+  23   1          
+  24   1          uint16_t tmpParityValue       = 0;
+  25   1          
+  26   1          // 保存设备类型，在应答包中使用
+  27   1          //
+  28   1          RealtimeControl_DeviceType = tmpDeviceType;
+  29   1          
+  30   1          
+  31   1          // 设备编号
+  32   1          //
+  33   1          NRF905_SendBuffer[0] = tmpDeviceNoL;
+  34   1          
+  35   1          NRF905_SendBuffer[1] = tmpDeviceNoH;
+  36   1          
+  37   1          // 命令编号
+  38   1          //
+  39   1          NRF905_SendBuffer[2] = tmpCommandNo;
+  40   1          
+  41   1          // 命令流水号
+  42   1          //
+  43   1          NRF905_SendBuffer[3] = tmpCommandSerialNo;
+  44   1          
+  45   1          // 目的中继
+  46   1          //
+  47   1          NRF905_SendBuffer[4] = tmpRepeater1;
+  48   1          
+  49   1          // 中继1
+  50   1          //
+C51 COMPILER V9.54   COMMAND_REALTIMECONTROL                                               01/18/2017 12:57:30 PAGE 2   
+
+  51   1          NRF905_SendBuffer[5] = tmpRepeater1;
+  52   1          
+  53   1          // 中继2
+  54   1          //
+  55   1          NRF905_SendBuffer[6] = tmpRepeater2;
+  56   1          
+  57   1          // 中继3
+  58   1          //
+  59   1          NRF905_SendBuffer[7] = tmpRepeater3;
+  60   1          
+  61   1          // 数据
+  62   1          //
+  63   1          NRF905_SendBuffer[8] = 0xE5;
+  64   1          
+  65   1          memcpy(NRF905_SendBuffer + 9, Data + 9, 8);
+  66   1          
+  67   1          NRF905_SendBuffer[17] = tmpDeviceNoL;
+  68   1          
+  69   1          NRF905_SendBuffer[18] = tmpDeviceNoH;
+  70   1          
+  71   1          NRF905_SendBuffer[19] = tmpDeviceType;
+  72   1          
+  73   1          memcpy(NRF905_SendBuffer + 20, Data + 17, 8);
+  74   1          
+  75   1          // 内部和校验
+  76   1          //
+  77   1          tmpParityValue = Temporary_CalcSumParity(NRF905_SendBuffer + 8, 20);
+  78   1          NRF905_SendBuffer[28] = tmpParityValue;
+  79   1          NRF905_SendBuffer[29] = tmpParityValue >> 8;
+  80   1          
+  81   1          // 外部和校验
+  82   1          //
+  83   1          tmpParityValue = Temporary_CalcSumParity(NRF905_SendBuffer, 30);
+  84   1          NRF905_SendBuffer[Enum_Wirelss_ParityL] = tmpParityValue;
+  85   1          NRF905_SendBuffer[Enum_Wirelss_ParityH] = tmpParityValue >> 8;
+  86   1          
+  87   1          // 发送数据到无线设备
+  88   1          //
+  89   1              App_Hal_Api.wireless->write(NRF905_SendBuffer);
+  90   1              
+  91   1              // 根据中继来设置无线发送等待超时时间
+  92   1              //
+  93   1              Pca_Start(NRF905_SendBuffer, 0);
+  94   1      }
+  95          
+  96          
+  97          void RealtimeControl_SendDataToPC(uint8_t *Data)
+  98          {
+  99   1          uint8_t tmpDeviceNoL    = Data[0];
+ 100   1          
+ 101   1          uint8_t tmpDeviceNoH    = Data[1];
+ 102   1          
+ 103   1          uint8_t tmpCommandSerialNo  = Data[3];
+ 104   1          
+ 105   1          uint8_t tmpUploadMode       = Data[9];
+ 106   1          
+ 107   1          uint8_t tmpWhiteListLen     = Data[10];
+ 108   1          
+ 109   1          uint8_t tmpUploadStatus     = Data[27];
+ 110   1          
+ 111   1          
+ 112   1          // 设备编号
+C51 COMPILER V9.54   COMMAND_REALTIMECONTROL                                               01/18/2017 12:57:30 PAGE 3   
+
+ 113   1          //
+ 114   1          SocketData_SendBuffer[0] = tmpDeviceNoL;
+ 115   1          
+ 116   1          SocketData_SendBuffer[1] = tmpDeviceNoH;
+ 117   1          
+ 118   1          // 设备类型
+ 119   1          //
+ 120   1          SocketData_SendBuffer[2] = RealtimeControl_DeviceType;
+ 121   1          
+ 122   1          memcpy(SocketData_SendBuffer + 3, Data + 9, 8);
+ 123   1          
+ 124   1          memcpy(SocketData_SendBuffer + 11, Data + 20, 8);
+ 125   1          
+ 126   1          // 发送中继器测试包给PC
+ 127   1          //
+ 128   1          PC_SendCommand(0x14, tmpCommandSerialNo, SocketData_SendBuffer,  19);    
+ 129   1      }
+ 130          
+ 131          
+ 132          
+ 133          
+ 134          
+ 135          
+ 136          
+ 137          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    486    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =      1      16
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

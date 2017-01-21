@@ -1,0 +1,311 @@
+C51 COMPILER V9.54   MIDDLEWAREDATA                                                        01/10/2017 18:08:21 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE MIDDLEWAREDATA
+OBJECT MODULE PLACED IN ..\output\MiddlewareData.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\MiddlewareWesocket\MiddlewareData.c LARGE OPTIMIZE(8,SPEED) 
+                    -BROWSE INCDIR(.\HeadFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Command_Conter;.\Hea
+                    -dFile\App\Command_DataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile\App\Command_Whi
+                    -teList;.\HeadFile\App\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareWesocket) DEBUG OBJECTEXTEND PR
+                    -INT(..\listing\MiddlewareData.lst) OBJECT(..\output\MiddlewareData.obj)
+
+line level    source
+
+   1          #include "MiddlewareData.h"
+   2          
+   3          
+   4          // ====================  查找1或0的最低位  ===============================
+   5          //
+   6          //char code MiddlewareData_Matrix8_0[256] = {
+   7          //      
+   8          //      0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4,         /* 0x00 to 0x0F                  */
+   9          //      0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 5,         /* 0x10 to 0x1F                  */
+  10          //      0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4,         /* 0x20 to 0x2F                  */
+  11          //      0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 6,         /* 0x30 to 0x3F                  */
+  12          //      0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4,         /* 0x40 to 0x4F                  */
+  13          //      0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 5,         /* 0x50 to 0x5F                  */
+  14          //      0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4,         /* 0x60 to 0x6F                  */
+  15          //      0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 7,         /* 0x70 to 0x7F                  */
+  16          //      0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4,         /* 0x80 to 0x8F                  */
+  17          //      0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 5,         /* 0x90 to 0x9F                  */
+  18          //      0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4,         /* 0xA0 to 0xAF                  */
+  19          //      0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 6,         /* 0xB0 to 0xBF                  */
+  20          //      0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4,         /* 0xC0 to 0xCF                  */
+  21          //      0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 5,         /* 0xD0 to 0xDF                  */
+  22          //      0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4,         /* 0xE0 to 0xEF                  */
+  23          //      0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, -1         /* 0xF0 to 0xFF                  */
+  24          //};
+  25          
+  26          
+  27          //char code MiddlewareData_Matrix8_1[256] = {
+  28          //      
+  29          //   -1, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,   /* 0x00 to 0x0F                   */
+  30          //    4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,   /* 0x10 to 0x1F                   */
+  31          //    5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,   /* 0x20 to 0x2F                   */
+  32          //    4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,   /* 0x30 to 0x3F                   */
+  33          //    6, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,   /* 0x40 to 0x4F                   */
+  34          //    4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,   /* 0x50 to 0x5F                   */
+  35          //    5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,   /* 0x60 to 0x6F                   */
+  36          //    4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,   /* 0x70 to 0x7F                   */
+  37          //    7, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,   /* 0x80 to 0x8F                   */
+  38          //    4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,   /* 0x90 to 0x9F                   */
+  39          //    5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,   /* 0xA0 to 0xAF                   */
+  40          //    4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,   /* 0xB0 to 0xBF                   */
+  41          //    6, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,   /* 0xC0 to 0xCF                   */
+  42          //    4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,   /* 0xD0 to 0xDF                   */
+  43          //    5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,   /* 0xE0 to 0xEF                   */
+  44          //    4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0    /* 0xF0 to 0xFF                   */
+  45          //};
+  46          
+  47          
+  48          char code MiddlewareData_Matrix4_0[16] = {
+  49                  
+  50                  0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, -1,        /* 0x00 to 0x0F                                    */
+  51          
+C51 COMPILER V9.54   MIDDLEWAREDATA                                                        01/10/2017 18:08:21 PAGE 2   
+
+  52          };
+  53          
+  54          
+  55          int8_t code     MiddlewareData_Matrix4_1[16] = {
+  56                  
+  57                  -1, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,        /* 0x00 to 0x0F                                    */ 
+  58                  
+  59          };
+  60          
+  61          
+  62          MiddlewareData_t        middlewareData;
+  63          
+  64          
+  65          // 初始化动态内存机制
+  66          //
+  67          void MiddlewareData_Init(void)
+  68          {
+  69   1              MiddlewareData_Emtpy_PoolData();                                // 清空轮询数据
+  70   1              
+  71   1              MiddlewareData_Empty_SendDataNormal();                  // 清空普通发送数据
+  72   1              
+  73   1              MiddlewareData_Empty_ReceiveDataNormal();               // 清空普通接收数据
+  74   1              
+  75   1              MiddlewareData_Empty_SendDataUrgency();                 // 清空紧急发送数据
+  76   1              
+  77   1              MiddlewareData_Empty_ReceiveDataUrgency();              // 清空紧急接收数据
+  78   1      }
+  79          
+  80          
+  81          // 分配内存
+  82          //
+  83          uint8_t *MiddlewareData_Malloc(MiddlewareData_Enum type)
+  84          {
+  85   1              uint8_t *tmpBuffer = 0;
+  86   1              
+  87   1              switch (type)
+  88   1              {
+  89   2                      case MiddlewareData_PollData:                           // 轮询
+  90   2                              if (MiddlewareData_poolDataFlag != 0x0F)
+  91   2                              {
+  92   3                                      tmpBuffer = (uint8_t *)(MiddlewareData_poolData + MiddlewareData_Matrix4_0[MiddlewareData_poolDataFlag
+             -]);
+  93   3                                      MiddlewareData_poolDataFlag |= 1 << MiddlewareData_Matrix4_0[MiddlewareData_poolDataFlag];
+  94   3                              }
+  95   2                              break;
+  96   2                      
+  97   2                      case MiddlewareData_SendDataNormal:                     // 发送数据
+  98   2                              if (MiddlewareData_normalSendDataFlag != 0x0F)
+  99   2                              {
+ 100   3                                      tmpBuffer = (uint8_t *)(MiddlewareData_normalSendData + MiddlewareData_Matrix4_0[MiddlewareData_normal
+             -SendDataFlag]);
+ 101   3                                      MiddlewareData_normalSendDataFlag |= 1 << MiddlewareData_Matrix4_0[MiddlewareData_normalSendDataFlag];
+ 102   3                              }
+ 103   2                              break;
+ 104   2              
+ 105   2                      case MiddlewareData_ReceiveDataNormal:          // 接收数据
+ 106   2                              if (MiddlewareData_normalReceiveDataFlag != 0x0F)
+ 107   2                              {
+ 108   3                                      tmpBuffer = (uint8_t *)(MiddlewareData_normalReceiveData + MiddlewareData_Matrix4_0[MiddlewareData_nor
+             -malReceiveDataFlag]);
+ 109   3                                      MiddlewareData_normalReceiveDataFlag |= 1 << MiddlewareData_Matrix4_0[MiddlewareData_normalReceiveData
+             -Flag];
+C51 COMPILER V9.54   MIDDLEWAREDATA                                                        01/10/2017 18:08:21 PAGE 3   
+
+ 110   3                              }
+ 111   2                              break;
+ 112   2                      
+ 113   2                      case MiddlewareData_SendDataUrgency:            // 发送紧急数据
+ 114   2                              if (MiddlewareData_urgencySendDataFlag != 0x0F)
+ 115   2                              {
+ 116   3                                      tmpBuffer = (uint8_t *)(MiddlewareData_urgencySendData + MiddlewareData_Matrix4_0[MiddlewareData_urgen
+             -cySendDataFlag]);
+ 117   3                                      MiddlewareData_urgencySendDataFlag |= 1 << MiddlewareData_Matrix4_0[MiddlewareData_urgencySendDataFlag
+             -];
+ 118   3                              }
+ 119   2                              break;
+ 120   2                              
+ 121   2                      case MiddlewareData_ReceiveDataUrgency:         // 接收紧急数据
+ 122   2                              if (MiddlewareData_urgencyReceiveDataFlag != 0x0F)
+ 123   2                              {
+ 124   3                                      tmpBuffer = (uint8_t *)(MiddlewareData_urgencyReceiveData + MiddlewareData_Matrix4_0[MiddlewareData_ur
+             -gencyReceiveDataFlag]);
+ 125   3                                      MiddlewareData_urgencyReceiveDataFlag |= 1 << MiddlewareData_Matrix4_0[MiddlewareData_urgencyReceiveDa
+             -taFlag];
+ 126   3                              }
+ 127   2                              break;
+ 128   2                              
+ 129   2                      default:                                                                        // 错误
+ 130   2                              break;
+ 131   2              }
+ 132   1              return tmpBuffer;
+ 133   1      }
+ 134          
+ 135          
+ 136          // 为空
+ 137          //
+ 138          bool MiddlewareData_IsEmpty(MiddlewareData_Enum type)
+ 139          {
+ 140   1              switch (type)
+ 141   1              {
+ 142   2                      case MiddlewareData_PollData:                           // 轮询
+ 143   2                              return (MiddlewareData_poolDataFlag == 0);
+ 144   2                      
+ 145   2                      case MiddlewareData_SendDataNormal:                     // 发送数据
+ 146   2                              return (MiddlewareData_normalSendDataFlag == 0);
+ 147   2              
+ 148   2                      case MiddlewareData_ReceiveDataNormal:          // 接收数据
+ 149   2                              return (MiddlewareData_normalReceiveDataFlag == 0);
+ 150   2                      
+ 151   2                      case MiddlewareData_SendDataUrgency:            // 发送紧急数据
+ 152   2                              return (MiddlewareData_urgencySendDataFlag == 0);
+ 153   2                              
+ 154   2                      case MiddlewareData_ReceiveDataUrgency:         // 接收紧急数据
+ 155   2                              return (MiddlewareData_urgencyReceiveDataFlag == 0);
+ 156   2                              
+ 157   2                      default:                                                                        // 错误
+ 158   2                              break;
+ 159   2              }
+ 160   1              return 1;
+ 161   1      }
+ 162          
+ 163          
+ 164          // 获取数据
+ 165          //
+ 166          uint8_t *MiddlewareData_Fetch(MiddlewareData_Enum type)
+ 167          {
+C51 COMPILER V9.54   MIDDLEWAREDATA                                                        01/10/2017 18:08:21 PAGE 4   
+
+ 168   1              uint8_t *tmpBuffer = 0;
+ 169   1              
+ 170   1              switch (type)
+ 171   1              {
+ 172   2                      case MiddlewareData_PollData:                           // 轮询
+ 173   2                              if (MiddlewareData_poolDataFlag)
+ 174   2                              {
+ 175   3                                      tmpBuffer = (uint8_t *)(MiddlewareData_poolData + MiddlewareData_Matrix4_1[MiddlewareData_poolDataFlag
+             -]);
+ 176   3                              }
+ 177   2                              break;
+ 178   2                      
+ 179   2                      case MiddlewareData_SendDataNormal:                     // 发送数据
+ 180   2                              if (MiddlewareData_normalSendDataFlag)
+ 181   2                              {
+ 182   3                                      tmpBuffer = (uint8_t *)(MiddlewareData_normalSendData + MiddlewareData_Matrix4_1[MiddlewareData_normal
+             -SendDataFlag]);
+ 183   3                              }
+ 184   2                              break;
+ 185   2              
+ 186   2                      case MiddlewareData_ReceiveDataNormal:          // 接收数据
+ 187   2                              if (MiddlewareData_normalReceiveDataFlag)
+ 188   2                              {
+ 189   3                                      tmpBuffer = (uint8_t *)(MiddlewareData_normalReceiveData + MiddlewareData_Matrix4_1[MiddlewareData_nor
+             -malReceiveDataFlag]);
+ 190   3                              }
+ 191   2                              break;
+ 192   2                      
+ 193   2                      case MiddlewareData_SendDataUrgency:            // 发送紧急数据
+ 194   2                              if (MiddlewareData_urgencySendDataFlag)
+ 195   2                              {
+ 196   3                                      tmpBuffer = (uint8_t *)(MiddlewareData_urgencySendData + MiddlewareData_Matrix4_1[MiddlewareData_urgen
+             -cySendDataFlag]);
+ 197   3                              }
+ 198   2                              break;
+ 199   2                              
+ 200   2                      case MiddlewareData_ReceiveDataUrgency:         // 接收紧急数据
+ 201   2                              if (MiddlewareData_urgencyReceiveDataFlag)
+ 202   2                              {
+ 203   3                                      tmpBuffer = (uint8_t *)(MiddlewareData_urgencyReceiveData + MiddlewareData_Matrix4_1[MiddlewareData_ur
+             -gencyReceiveDataFlag]);
+ 204   3                              }
+ 205   2                              break;
+ 206   2                              
+ 207   2                      default:                                                                        // 错误
+ 208   2                              break;
+ 209   2              }
+ 210   1              return tmpBuffer;
+ 211   1      }
+ 212          
+ 213          
+ 214          // 释放内存
+ 215          //
+ 216          void MiddlewareData_Free(MiddlewareData_Enum type)
+ 217          {
+ 218   1              switch (type)
+ 219   1              {
+ 220   2                      case MiddlewareData_PollData:                   // 轮询
+ 221   2                              if (MiddlewareData_poolDataFlag)
+ 222   2                              {
+ 223   3                                      MiddlewareData_poolDataFlag &= ~(1 << MiddlewareData_Matrix4_1[MiddlewareData_poolDataFlag]);
+ 224   3                              }
+C51 COMPILER V9.54   MIDDLEWAREDATA                                                        01/10/2017 18:08:21 PAGE 5   
+
+ 225   2                              break;
+ 226   2                      
+ 227   2                      case MiddlewareData_SendDataNormal:                     // 发送数据
+ 228   2                              if (MiddlewareData_normalSendDataFlag)
+ 229   2                              {
+ 230   3                                      MiddlewareData_normalSendDataFlag &= ~(1 << MiddlewareData_Matrix4_1[MiddlewareData_normalSendDataFlag
+             -]);
+ 231   3                              }
+ 232   2                              break;
+ 233   2              
+ 234   2                      case MiddlewareData_ReceiveDataNormal:          // 接收数据
+ 235   2                              if (MiddlewareData_normalReceiveDataFlag)
+ 236   2                              {
+ 237   3                                      MiddlewareData_normalReceiveDataFlag &= ~(1 << MiddlewareData_Matrix4_1[MiddlewareData_normalReceiveDa
+             -taFlag]);
+ 238   3                              }
+ 239   2                              break;
+ 240   2                      
+ 241   2                      case MiddlewareData_SendDataUrgency:    // 发送紧急数据
+ 242   2                              if (MiddlewareData_urgencySendDataFlag)
+ 243   2                              {
+ 244   3                                      MiddlewareData_urgencySendDataFlag &= ~(1 << MiddlewareData_Matrix4_1[MiddlewareData_urgencySendDataFl
+             -ag]);
+ 245   3                              }
+ 246   2                              break;
+ 247   2                              
+ 248   2                      case MiddlewareData_ReceiveDataUrgency: // 接收紧急数据
+ 249   2                              if (MiddlewareData_urgencyReceiveDataFlag)
+ 250   2                              {
+ 251   3                                      MiddlewareData_urgencyReceiveDataFlag &= ~(1 << MiddlewareData_Matrix4_1[MiddlewareData_urgencyReceive
+             -DataFlag]);
+ 252   3                              }
+ 253   2                              break;
+ 254   2                              
+ 255   2                      default:                                                                // 错误
+ 256   2                              break;
+ 257   2              }
+ 258   1      }
+ 259          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1015    ----
+   CONSTANT SIZE    =     32    ----
+   XDATA SIZE       =    643    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

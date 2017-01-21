@@ -1,0 +1,107 @@
+C51 COMPILER V9.54   COMMAND_CONTROLERPARAMETER                                            01/18/2017 12:57:28 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE COMMAND_CONTROLERPARAMETER
+OBJECT MODULE PLACED IN ..\output\Command_ControlerParameter.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\App\Command_Conter\Command_ControlerParameter.c LARGE OPTIMI
+                    -ZE(8,SPEED) BROWSE INCDIR(.\HeadFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Command_
+                    -Conter;.\HeadFile\App\Command_DataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile\App
+                    -\Command_WhiteList;.\HeadFile\App\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareMenu;.\HeadFile\Mid
+                    -dlewareTask;.\HeadFile\MiddlewareWireless;.\HeadFile\MiddlewareSocket;.\HeadFile\MiddlewareWesocket) DEBUG OBJECTEXTEND 
+                    -PRINT(..\listing\Command_ControlerParameter.lst) OBJECT(..\output\Command_ControlerParameter.obj)
+
+line level    source
+
+   1          #include "Command_ControlerParameter.h"
+   2          
+   3          
+   4          // 控制器参数配置
+   5          //
+   6          void ControlerParameter_DealData(uint8_t *Data)
+   7          {
+   8   1          uint8_t tmpSerialNo = Data[1];
+   9   1          
+  10   1          uint8_t tmpChangeChannel = Data[Enum_CommandContent + 0];
+  11   1          
+  12   1          uint8_t tmpChannel = Data[Enum_CommandContent + 1];
+  13   1          
+  14   1          uint8_t tmpChangePoolInterval = Data[Enum_CommandContent + 2];
+  15   1          
+  16   1          uint8_t tmpPoolInterval = Data[Enum_CommandContent + 3];
+  17   1              
+  18   1              uint8_t tmpChangeHeartbeatInterval = Data[Enum_CommandContent + 4];
+  19   1              
+  20   1              uint8_t tmpHeartbeatInterval = Data[Enum_CommandContent + 5];
+  21   1              
+  22   1              SocketData_SendBuffer[0] = 0x32; 
+  23   1              SocketData_SendBuffer[2] = 0x32;
+  24   1              SocketData_SendBuffer[4] = 0x32;
+  25   1          
+  26   1          // ----------------  修改控制器的信道号  ------------------------
+  27   1          //
+  28   1          if (0x31 == tmpChangeChannel)
+  29   1          {
+  30   2              App_Hal_Api.wireless->changeChannel(tmpChannel);
+  31   2                      
+  32   2                      App_Hal_Api.beep->setTime(30);
+  33   2                      
+  34   2                      SocketData_SendBuffer[0] = 0x31;
+  35   2          }
+  36   1          
+  37   1          // ---------------  修改控制器的轮询间隔  ---------------------
+  38   1          //
+  39   1          if (0x31 == tmpChangePoolInterval)
+  40   1          {
+  41   2                      SocketData_SendBuffer[2] = 0x31;
+  42   2          }
+  43   1              
+  44   1              // ---------------  修改控制器的心跳间隔  ---------------------
+  45   1          //
+  46   1              if (0x31 == tmpChangeHeartbeatInterval)
+  47   1              {
+  48   2                      SetHeartbeatInterval(tmpHeartbeatInterval);
+  49   2                      
+  50   2                      SetHeartbeatIntervalBak(tmpHeartbeatInterval);
+C51 COMPILER V9.54   COMMAND_CONTROLERPARAMETER                                            01/18/2017 12:57:28 PAGE 2   
+
+  51   2                      
+  52   2                      SocketData_SendBuffer[4] = 0x31;
+  53   2              }
+  54   1              
+  55   1              // 设置无线信道号应答数据
+  56   1              //
+  57   1              SocketData_SendBuffer[1] = tmpChannel;
+  58   1              
+  59   1              // 设置轮询间隔应答数据
+  60   1              //
+  61   1              SocketData_SendBuffer[3] = tmpPoolInterval;
+  62   1              
+  63   1              // 设置心跳间隔应答数据
+  64   1              //
+  65   1              SocketData_SendBuffer[5] = ControlerInfo.HeartbeatInterval;
+  66   1          
+  67   1          // 发送控制器参数给PC
+  68   1          //
+  69   1          PC_SendCommand(0x6A, tmpSerialNo, SocketData_SendBuffer, 6);
+  70   1      }
+  71          
+  72          
+  73          
+  74          
+  75          
+  76          
+  77          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    255    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----       6
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

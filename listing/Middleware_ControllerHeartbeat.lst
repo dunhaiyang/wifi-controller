@@ -1,0 +1,146 @@
+C51 COMPILER V9.54   MIDDLEWARE_CONTROLLERHEARTBEAT                                        01/10/2017 18:08:20 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE MIDDLEWARE_CONTROLLERHEARTBEAT
+OBJECT MODULE PLACED IN ..\output\Middleware_ControllerHeartbeat.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\MiddlewareWesocket\Middleware_ControllerHeartbeat.c LARGE OP
+                    -TIMIZE(8,SPEED) BROWSE INCDIR(.\HeadFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Comm
+                    -and_Conter;.\HeadFile\App\Command_DataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile
+                    -\App\Command_WhiteList;.\HeadFile\App\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareWesocket) DEBUG
+                    - OBJECTEXTEND PRINT(..\listing\Middleware_ControllerHeartbeat.lst) OBJECT(..\output\Middleware_ControllerHeartbeat.obj)
+
+line level    source
+
+   1          #include "Middleware_ControllerHeartbeat.h"
+   2          //#include "Kernel_PC.h"
+   3          
+   4          
+   5          bool ControllerHeartbeat_DealFrameText(uint8_t **Data)
+   6          {
+   7   1              uint8_t *tmpData;
+   8   1              
+   9   1              if (!(Json_ReceiveFrameStringValue(Data, "dt\":\"", 5, &tmpData) &&
+  10   1                      tmpData[4] == '-' && 
+  11   1                      tmpData[7] == '-' &&
+  12   1                      tmpData[16] == ':' && 
+  13   1                      tmpData[19] == ':'))
+  14   1              {
+  15   2                      return 0;
+  16   2              }
+  17   1              
+  18   1      //      Calibrate_Time(tmpData);
+  19   1              
+  20   1              return 1;
+  21   1      }
+  22          
+  23          
+  24          void ControllerHeartbeat_SendFrameTextToPc(uint8_t *Data)
+  25          {
+  26   1              uint16_t        tmpDataLen = 0;
+  27   1              
+  28   1      //      uint8_t         tmpIndex;
+  29   1              
+  30   1              // websocket前缀
+  31   1              //
+  32   1              Data[tmpDataLen++] = 0x81;
+  33   1              
+  34   1              Data[tmpDataLen++] = 0xFE;
+  35   1              
+  36   1              // 负载长度字段
+  37   1              //
+  38   1              Data[tmpDataLen++] = 0x00;
+  39   1              
+  40   1              Data[tmpDataLen++] = 0x00;
+  41   1              
+  42   1              // 添加掩码
+  43   1              //
+  44   1              Data[tmpDataLen++] = 0x00;
+  45   1              
+  46   1              Data[tmpDataLen++] = 0x00;
+  47   1              
+  48   1              Data[tmpDataLen++] = 0x00;
+  49   1              
+  50   1              Data[tmpDataLen++] = 0x00;
+  51   1              
+C51 COMPILER V9.54   MIDDLEWARE_CONTROLLERHEARTBEAT                                        01/10/2017 18:08:20 PAGE 2   
+
+  52   1              // 负载数据内容: 指令号和序列号
+  53   1              //
+  54   1              memcpy(Data + tmpDataLen, "{\"cn\":\"004\",\"csn\":\"", 19);
+  55   1              tmpDataLen += 19;
+  56   1              
+  57   1      //      Data[tmpDataLen++] = DeviceInfo_DeviceDataSerialNo / 10000 + '0';
+  58   1      //      Data[tmpDataLen++] = DeviceInfo_DeviceDataSerialNo / 1000 % 10 + '0';
+  59   1      //      Data[tmpDataLen++] = DeviceInfo_DeviceDataSerialNo / 100 % 10 + '0';
+  60   1      //      Data[tmpDataLen++] = DeviceInfo_DeviceDataSerialNo / 10 % 10 + '0';
+  61   1      //      Data[tmpDataLen++] = DeviceInfo_DeviceDataSerialNo % 10 + '0';
+  62   1              
+  63   1      //      DeviceInfo_DeviceDataSerialNo++;
+  64   1              
+  65   1              // 负载数据内容：不在线的设备列表信息
+  66   1              //
+  67   1              memcpy(Data + tmpDataLen, "\",\"dld\":[", 9);
+  68   1              tmpDataLen += 9;
+  69   1              
+  70   1              // 负载数据内容：设备类型和设备编号
+  71   1              //
+  72   1      //      for (tmpIndex = 0; tmpIndex < DeviceInfo_DeviceMaxNum; tmpIndex++)
+  73   1      //      {
+  74   1      //              if (!(DeviceList[tmpIndex].canUseFlag || DeviceList[tmpIndex].deviceOnline))
+  75   1      //              {
+  76   1      //                      memcpy(Data + tmpDataLen, "{\"dt\":\"xxx\",\"dns\":\"xxxxx\"},", 27);
+  77   1      //                      
+  78   1      //                      // dt
+  79   1      //                      //
+  80   1      //                      Data[tmpDataLen + 7] = '0';
+  81   1      //                      Data[tmpDataLen + 8] = DeviceList[tmpIndex].deviceType / 10 % 10 + '0';
+  82   1      //                      Data[tmpDataLen + 9] = DeviceList[tmpIndex].deviceType % 10 + '0';
+  83   1      //                      
+  84   1      //                      // dns
+  85   1      //                      //
+  86   1      //                      Data[tmpDataLen + 19] = DeviceList[tmpIndex].deviceNo / 10000 + '0';
+  87   1      //                      Data[tmpDataLen + 20] = DeviceList[tmpIndex].deviceNo / 1000 % 10 + '0';
+  88   1      //                      Data[tmpDataLen + 21] = DeviceList[tmpIndex].deviceNo / 100 % 10 + '0';
+  89   1      //                      Data[tmpDataLen + 22] = DeviceList[tmpIndex].deviceNo / 10 % 10 + '0';
+  90   1      //                      Data[tmpDataLen + 23] = DeviceList[tmpIndex].deviceNo % 10 + '0';
+  91   1      //                      
+  92   1      //                      tmpDataLen += 27;
+  93   1      //              }
+  94   1      //      }
+  95   1              
+  96   1              // 为了去掉逗号
+  97   1              //
+  98   1              if (Data[tmpDataLen - 1] != '[')
+  99   1              {
+ 100   2                      tmpDataLen--;
+ 101   2              }
+ 102   1              // 加上尾巴
+ 103   1              //
+ 104   1              Data[tmpDataLen++] = ']';
+ 105   1              Data[tmpDataLen++] = '}';
+ 106   1              
+ 107   1              // 负载长度字段
+ 108   1              //
+ 109   1              Data[2] = (tmpDataLen - 8) >> 8;
+ 110   1              
+ 111   1              Data[3] = (tmpDataLen - 8) ;
+ 112   1      }
+ 113          
+C51 COMPILER V9.54   MIDDLEWARE_CONTROLLERHEARTBEAT                                        01/10/2017 18:08:20 PAGE 3   
+
+ 114          
+ 115          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    500    ----
+   CONSTANT SIZE    =     36    ----
+   XDATA SIZE       =   ----       8
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

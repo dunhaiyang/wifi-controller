@@ -1,0 +1,134 @@
+C51 COMPILER V9.54   SCHEDULER                                                             01/18/2017 12:11:30 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE SCHEDULER
+OBJECT MODULE PLACED IN ..\output\Scheduler.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\KQA_OS\Scheduler.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(.\H
+                    -eadFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Command_Conter;.\HeadFile\App\Command
+                    -_DataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile\App\Command_WhiteList;.\HeadFile
+                    -\App\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareMenu;.\HeadFile\MiddlewareTask;.\HeadFile\Middle
+                    -wareWireless;.\HeadFile\MiddlewareSocket;.\HeadFile\MiddlewareWesocket) DEBUG OBJECTEXTEND PRINT(..\listing\Scheduler.ls
+                    -t) OBJECT(..\output\Scheduler.obj)
+
+line level    source
+
+   1          #include "Scheduler.h"
+   2          
+   3          
+   4          static  Scheduler *Scheduler_self;
+   5          
+   6          
+   7          // 定义延时时间
+   8          //
+   9          void Scheduler_Delay1ms(uint16_t millisecond)
+  10          {
+  11   1              static uint32_t tmpStart;
+  12   1              
+  13   1              static uint32_t tmpNow;
+  14   1              
+  15   1              tmpStart = HAL_SYSTEMTIME();
+  16   1              
+  17   1              do
+  18   1              {
+  19   2                      tmpNow = HAL_SYSTEMTIME();
+  20   2                      
+  21   2              }while (HAL_DIFFERENT4_TIME(tmpNow, tmpStart) <= millisecond);
+  22   1      }
+  23          
+  24          
+  25          void Scheduler_RegisterTask(void *tasks, uint8_t taskEntries)
+  26          {
+  27   1              uint8_t i;
+  28   1              
+  29   1              Scheduler_self->tasks = tasks;
+  30   1              
+  31   1              Scheduler_self->taskEntries = taskEntries;
+  32   1              
+  33   1              for (i = 0; i < Scheduler_self->taskEntries; i++)
+  34   1              {
+  35   2                      Scheduler_self->tasks[i].__intervalTicks = 0;
+  36   2                      
+  37   2                      Scheduler_self->tasks[i].__maxLimitMilliseconds = 0;
+  38   2              }
+  39   1      }
+  40          
+  41          
+  42          void Scheduler_Run(void)
+  43          {
+  44   1              static uint8_t i;
+  45   1              
+  46   1              static uint16_t tickDt;
+  47   1              
+  48   1              static uint32_t maxLimitDt;
+  49   1              
+  50   1              for (i = 0; i < Scheduler_self->taskEntries; i++)
+C51 COMPILER V9.54   SCHEDULER                                                             01/18/2017 12:11:30 PAGE 2   
+
+  51   1              {
+  52   2                      tickDt = HAL_DIFFERENT2_TIME(Scheduler_self->ticks, 
+  53   2                                                                                        Scheduler_self->tasks[i].__intervalTicks);
+  54   2                      
+  55   2                      maxLimitDt = HAL_DIFFERENT4_TIME(Scheduler_self->milliseconds(), 
+  56   2                                                                                       Scheduler_self->tasks[i].__maxLimitMilliseconds);
+  57   2                      
+  58   2                      if (tickDt >= Scheduler_self->tasks[i].intervalTicks ||
+  59   2                              maxLimitDt >= Scheduler_self->tasks[i].maxLimitMilliseconds)
+  60   2                      {
+  61   3                              if (Scheduler_self->tasks[i].function())
+  62   3                              {
+  63   4                                      Scheduler_self->tasks[i].__intervalTicks = Scheduler_self->ticks;
+  64   4                              
+  65   4                                      Scheduler_self->tasks[i].__maxLimitMilliseconds = Scheduler_self->milliseconds();
+  66   4                              }
+  67   3                      }
+  68   2              }
+  69   1      }
+  70          
+  71          
+  72          void Scheduler_TicksIncrease(void)
+  73          {
+  74   1              Scheduler_self->ticks++;
+  75   1      }
+  76          
+  77          
+  78          void Scheduler_Init(void *self)
+  79          {
+  80   1              Scheduler_self = self;
+  81   1              
+  82   1              Scheduler_self->init = Scheduler_Init;
+  83   1              
+  84   1              Scheduler_self->run = Scheduler_Run;
+  85   1              
+  86   1              Scheduler_self->registerTask = Scheduler_RegisterTask;
+  87   1              
+  88   1              Scheduler_self->delayMilliseconds = Scheduler_Delay1ms;
+  89   1              
+  90   1              Scheduler_self->milliseconds = HAL_SYSTEMTIME;
+  91   1              
+  92   1              Scheduler_self->ticksIncrease = Scheduler_TicksIncrease;
+  93   1              
+  94   1              Scheduler_self->ticks = 0;
+  95   1              
+  96   1              Scheduler_self->taskEntries = 0;
+  97   1      }
+  98          
+  99          
+ 100          
+ 101          
+ 102          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1250    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     18       3
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+C51 COMPILER V9.54   SCHEDULER                                                             01/18/2017 12:11:30 PAGE 3   
+
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

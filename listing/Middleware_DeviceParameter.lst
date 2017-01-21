@@ -1,0 +1,344 @@
+C51 COMPILER V9.54   MIDDLEWARE_DEVICEPARAMETER                                            01/10/2017 18:08:21 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE MIDDLEWARE_DEVICEPARAMETER
+OBJECT MODULE PLACED IN ..\output\Middleware_DeviceParameter.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\MiddlewareWesocket\Middleware_DeviceParameter.c LARGE OPTIMI
+                    -ZE(8,SPEED) BROWSE INCDIR(.\HeadFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Command_
+                    -Conter;.\HeadFile\App\Command_DataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile\App
+                    -\Command_WhiteList;.\HeadFile\App\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareWesocket) DEBUG OBJ
+                    -ECTEXTEND PRINT(..\listing\Middleware_DeviceParameter.lst) OBJECT(..\output\Middleware_DeviceParameter.obj)
+
+line level    source
+
+   1          #include "Middleware_DeviceParameter.h"
+   2          
+   3          
+   4          uint16_t        DeviceParameter_DeviceNo;
+   5          
+   6          
+   7          uint8_t         DeviceParameter_DeviceType;
+   8          
+   9          
+  10          uint8_t         DeviceParameter_IsWrite;
+  11          
+  12          
+  13          bool __Write_DealFrameText(uint8_t *router, uint8_t pn, uint8_t *dc)
+  14          {
+  15   1              uint8_t          *tmpData = MiddlewareData_Malloc(MiddlewareData_SendDataNormal);
+  16   1              
+  17   1              uint16_t        tmpParityValue;
+  18   1              
+  19   1              if (!tmpData)
+  20   1              {
+  21   2                      return 0;
+  22   2              }
+  23   1              // 设备编号，命令编号， 命令流水号，中继
+  24   1              //
+  25   1              tmpData[0] = DeviceParameter_DeviceNo;
+  26   1              tmpData[1] = DeviceParameter_DeviceNo >> 8;
+  27   1              tmpData[2] = 25;
+  28   1              tmpData[4] = router[0];
+  29   1              tmpData[5] = router[0];
+  30   1              tmpData[6] = router[1];
+  31   1              tmpData[7] = router[2];
+  32   1              tmpData[8] = 0xEB;
+  33   1              tmpData[9] = DeviceParameter_DeviceNo;
+  34   1              tmpData[10] = DeviceParameter_DeviceNo >> 8;
+  35   1              tmpData[11] = DeviceParameter_DeviceType;
+  36   1              tmpData[12] = pn;
+  37   1              tmpData[13] = 0x88;                             // 默认都是8字节
+  38   1      //      tmpData[14] = (QuickTransferTable[dc[0]] << 4) | (QuickTransferTable[dc[1]]);
+  39   1      //      tmpData[15] = (QuickTransferTable[dc[2]] << 4) | (QuickTransferTable[dc[3]]);
+  40   1      //      tmpData[16] = (QuickTransferTable[dc[4]] << 4) | (QuickTransferTable[dc[5]]);
+  41   1      //      tmpData[17] = (QuickTransferTable[dc[6]] << 4) | (QuickTransferTable[dc[7]]);
+  42   1      //      tmpData[18] = (QuickTransferTable[dc[8]] << 4) | (QuickTransferTable[dc[9]]);
+  43   1      //      tmpData[19] = (QuickTransferTable[dc[10]] << 4) | (QuickTransferTable[dc[11]]);
+  44   1      //      tmpData[20] = (QuickTransferTable[dc[12]] << 4) | (QuickTransferTable[dc[13]]);
+  45   1      //      tmpData[21] = (QuickTransferTable[dc[14]] << 4) | (QuickTransferTable[dc[15]]);
+  46   1              
+  47   1              // 计算校验
+  48   1              //
+  49   1              tmpParityValue = Temporary_CalcSumParity(tmpData, 30);
+  50   1          tmpData[Enum_Wirelss_ParityL] = tmpParityValue;
+  51   1          tmpData[Enum_Wirelss_ParityH] = tmpParityValue >> 8;
+C51 COMPILER V9.54   MIDDLEWARE_DEVICEPARAMETER                                            01/10/2017 18:08:21 PAGE 2   
+
+  52   1              
+  53   1              return 1;
+  54   1      }
+*** WARNING C280 IN LINE 13 OF SourceFile\MiddlewareWesocket\Middleware_DeviceParameter.c: 'dc': unreferenced local vari
+             -able
+  55          
+  56          
+  57          bool __Read_DealFrameText(uint8_t *router, uint8_t pn)
+  58          {
+  59   1              uint8_t         *tmpData = MiddlewareData_Malloc(MiddlewareData_SendDataNormal);
+  60   1              
+  61   1              uint16_t        tmpParityValue;
+  62   1              
+  63   1              if (!tmpData)
+  64   1              {
+  65   2                      return 0;
+  66   2              }
+  67   1              // 设备编号，命令编号， 命令流水号，中继
+  68   1              //
+  69   1              tmpData[0] = DeviceParameter_DeviceNo;
+  70   1              tmpData[1] = DeviceParameter_DeviceNo >> 8;
+  71   1              tmpData[2] = 25;
+  72   1              tmpData[4] = router[0];
+  73   1              tmpData[5] = router[0];
+  74   1              tmpData[6] = router[1];
+  75   1              tmpData[7] = router[2];
+  76   1              tmpData[8] = 0xEB;
+  77   1              tmpData[9] = DeviceParameter_DeviceNo;
+  78   1              tmpData[10] = DeviceParameter_DeviceNo >> 8;
+  79   1              tmpData[11] = DeviceParameter_DeviceType;
+  80   1              tmpData[12] = pn;
+  81   1              tmpData[13] = 0x08;                             // 默认都是8字节
+  82   1              
+  83   1              // 计算校验
+  84   1              //
+  85   1              tmpParityValue = Temporary_CalcSumParity(tmpData, 30);
+  86   1          tmpData[Enum_Wirelss_ParityL] = tmpParityValue;
+  87   1          tmpData[Enum_Wirelss_ParityH] = tmpParityValue >> 8;
+  88   1              
+  89   1              return 1;
+  90   1      }
+  91          
+  92          
+  93          
+  94          bool DeviceParameter_DealFrameText(uint8_t **Data)
+  95          {
+  96   1              uint8_t         router[3];
+  97   1              
+  98   1              uint8_t         pn;
+  99   1              
+ 100   1              uint8_t         *dc;
+ 101   1              
+ 102   1              // 获取设备编号
+ 103   1              //
+ 104   1              if (!Json_ReceiveFrameUintValue(Data, "dn\":\"", 5, &DeviceParameter_DeviceNo))
+ 105   1              {
+ 106   2                      return 0;
+ 107   2              }
+ 108   1              
+ 109   1              // 获取设备类型
+ 110   1              //
+ 111   1              if (!Json_ReceiveFrameCharValue(Data, "dt\":\"", 5, &DeviceParameter_DeviceType))
+C51 COMPILER V9.54   MIDDLEWARE_DEVICEPARAMETER                                            01/10/2017 18:08:21 PAGE 3   
+
+ 112   1              {
+ 113   2                      return 0;
+ 114   2              }
+ 115   1              
+ 116   1              // 从设备列表中查找路由信息
+ 117   1              //
+ 118   1      //      if (!DeviceInfo_GetRouter(DeviceParameter_DeviceNo, DeviceParameter_DeviceType, router))
+ 119   1      //      {
+ 120   1      //              return 0;
+ 121   1      //      }
+ 122   1              
+ 123   1              // 获取读写模式
+ 124   1              //
+ 125   1              if (!Json_ReceiveFrameFirstbyteValue(Data, "rwf\":\"", 6, &DeviceParameter_IsWrite))
+ 126   1              {
+ 127   2                      return 0;
+ 128   2              }
+ 129   1              printf("iswrite: %c\r\n", DeviceParameter_IsWrite);
+ 130   1              
+ 131   1              // 分解为无线指令数据包
+ 132   1              //
+ 133   1              while (1)
+ 134   1              {
+ 135   2                      if (!Json_ReceiveFrameCharValue(Data, "pn\":\"", 5, &pn))
+ 136   2                      {
+ 137   3                              return 1;
+ 138   3                      }
+ 139   2                      
+ 140   2                      if (DeviceParameter_IsWrite == 'W' || DeviceParameter_IsWrite == 'w')
+ 141   2                      {
+ 142   3                              if (!Json_ReceiveFrameStringValue(Data, "dc\":\"", 5, &dc))
+ 143   3                              {
+ 144   4                                      return 0;
+ 145   4                              }
+ 146   3                              
+ 147   3                              // 存储写参数指令
+ 148   3                              //
+ 149   3                              if (!__Write_DealFrameText(router, pn, dc))
+ 150   3                              {
+ 151   4                                      return 0;
+ 152   4                              }
+ 153   3                      }
+ 154   2                      else if (DeviceParameter_IsWrite == 'R' || DeviceParameter_IsWrite == 'r')
+ 155   2                      {
+ 156   3                              // 存储读参数指令
+ 157   3                              //
+ 158   3                              if (!__Read_DealFrameText(router, pn))
+ 159   3                              {
+ 160   4                                      return 0;
+ 161   4                              }
+ 162   3                      }
+ 163   2                      else
+ 164   2                      {
+ 165   3                              return 0;
+ 166   3                      }
+ 167   2              }
+ 168   1      }
+ 169          
+ 170                  
+ 171          void DeviceParameter_SendFrameTextToPc(uint16_t cmdSerialNo, uint8_t *Data)
+ 172          {
+ 173   1              uint16_t  tmpDataLen = 0;
+C51 COMPILER V9.54   MIDDLEWARE_DEVICEPARAMETER                                            01/10/2017 18:08:21 PAGE 4   
+
+ 174   1              
+ 175   1              // websocket前缀
+ 176   1              //
+ 177   1              Data[tmpDataLen++] = 0x81;
+ 178   1              
+ 179   1              Data[tmpDataLen++] = 0xFE;
+ 180   1              
+ 181   1              // 负载长度字段
+ 182   1              //
+ 183   1              Data[tmpDataLen++] = 0x00;
+ 184   1              
+ 185   1              Data[tmpDataLen++] = 0x00;
+ 186   1              
+ 187   1              // 添加掩码
+ 188   1              //
+ 189   1              Data[tmpDataLen++] = 0x00;
+ 190   1              
+ 191   1              Data[tmpDataLen++] = 0x00;
+ 192   1              
+ 193   1              Data[tmpDataLen++] = 0x00;
+ 194   1              
+ 195   1              Data[tmpDataLen++] = 0x00;
+ 196   1              
+ 197   1              // 负载数据内容: 指令号和序列号
+ 198   1              //
+ 199   1              memcpy(Data + tmpDataLen, "{\"cn\":\"008\",\"csn\":\"", 19);
+ 200   1              tmpDataLen += 19;
+ 201   1              
+ 202   1              Data[tmpDataLen++] = cmdSerialNo / 10000 + '0';
+ 203   1              Data[tmpDataLen++] = cmdSerialNo / 1000 % 10 + '0';
+ 204   1              Data[tmpDataLen++] = cmdSerialNo / 100 % 10 + '0';
+ 205   1              Data[tmpDataLen++] = cmdSerialNo / 10 % 10 + '0';
+ 206   1              Data[tmpDataLen++] = cmdSerialNo % 10 + '0';
+ 207   1              
+ 208   1              // 添加了设备编号
+ 209   1              //
+ 210   1              memcpy(Data + tmpDataLen, "\",\"dn\":\"", 8);
+ 211   1              tmpDataLen += 8;
+ 212   1              
+ 213   1              Data[tmpDataLen++] = DeviceParameter_DeviceNo / 10000 + '0';
+ 214   1              Data[tmpDataLen++] = DeviceParameter_DeviceNo / 1000 % 10 + '0';
+ 215   1              Data[tmpDataLen++] = DeviceParameter_DeviceNo / 100 % 10 + '0';
+ 216   1              Data[tmpDataLen++] = DeviceParameter_DeviceNo / 10 % 10 + '0';
+ 217   1              Data[tmpDataLen++] = DeviceParameter_DeviceNo % 10 + '0';
+ 218   1              
+ 219   1              // 添加了设备类型
+ 220   1              //
+ 221   1              memcpy(Data + tmpDataLen, "\",\"dt\":\"", 8);
+ 222   1              tmpDataLen += 8;
+ 223   1              Data[tmpDataLen++] = DeviceParameter_DeviceType / 100 % 10 + '0';
+ 224   1              Data[tmpDataLen++] = DeviceParameter_DeviceType / 10 % 10 + '0';
+ 225   1              Data[tmpDataLen++] = DeviceParameter_DeviceType % 10 + '0';
+ 226   1              
+ 227   1              // 写参数的应答包
+ 228   1              //
+ 229   1              if (DeviceParameter_IsWrite == 'W' || DeviceParameter_IsWrite == 'w')
+ 230   1              {
+ 231   2                      memcpy(Data + tmpDataLen, "\",\"rcheck\":true}", 16);
+ 232   2                      
+ 233   2                      tmpDataLen += 16;
+ 234   2                      
+ 235   2                      MiddlewareData_Empty_ReceiveDataNormal();
+C51 COMPILER V9.54   MIDDLEWARE_DEVICEPARAMETER                                            01/10/2017 18:08:21 PAGE 5   
+
+ 236   2              }
+ 237   1              // 读参数的应答包
+ 238   1              else if (DeviceParameter_IsWrite == 'R' || DeviceParameter_IsWrite == 'r')
+ 239   1              {
+ 240   2                      uint8_t  *tmpData;
+ 241   2                      
+ 242   2                      memcpy(Data + tmpDataLen, "\",\"ds\":[", 8);
+ 243   2                      
+ 244   2                      tmpDataLen += 8;
+ 245   2                      
+ 246   2                      while (tmpData = MiddlewareData_Fetch(MiddlewareData_ReceiveDataNormal))
+ 247   2                      {
+ 248   3                              memcpy(Data + tmpDataLen,"{\"pn\":\"", 7);
+ 249   3                              tmpDataLen += 7;
+ 250   3                              
+ 251   3                              Data[tmpDataLen++] = tmpData[12] / 100 % 10 + '0';
+ 252   3                              Data[tmpDataLen++] = tmpData[12] / 10 % 10 + '0';
+ 253   3                              Data[tmpDataLen++] = tmpData[12] % 10 + '0';
+ 254   3                              
+ 255   3                              memcpy(Data + tmpDataLen,"\",\"dc\":\"", 8);
+ 256   3                              tmpDataLen += 8;
+ 257   3                              
+ 258   3      //                      Data[tmpDataLen++] = QuickTransferTable_1[tmpData[14] >> 4];
+ 259   3      //                      Data[tmpDataLen++] = QuickTransferTable_1[tmpData[14] & 0x0F];
+ 260   3      //                      Data[tmpDataLen++] = QuickTransferTable_1[tmpData[15] >> 4];
+ 261   3      //                      Data[tmpDataLen++] = QuickTransferTable_1[tmpData[15] & 0x0F];
+ 262   3      //                      Data[tmpDataLen++] = QuickTransferTable_1[tmpData[16] >> 4];
+ 263   3      //                      Data[tmpDataLen++] = QuickTransferTable_1[tmpData[16] & 0x0F];
+ 264   3      //                      Data[tmpDataLen++] = QuickTransferTable_1[tmpData[17] >> 4];
+ 265   3      //                      Data[tmpDataLen++] = QuickTransferTable_1[tmpData[17] & 0x0F];
+ 266   3      //                      
+ 267   3      //                      Data[tmpDataLen++] = QuickTransferTable_1[tmpData[18] >> 4];
+ 268   3      //                      Data[tmpDataLen++] = QuickTransferTable_1[tmpData[18] & 0x0F];
+ 269   3      //                      Data[tmpDataLen++] = QuickTransferTable_1[tmpData[19] >> 4];
+ 270   3      //                      Data[tmpDataLen++] = QuickTransferTable_1[tmpData[19] & 0x0F];
+ 271   3      //                      Data[tmpDataLen++] = QuickTransferTable_1[tmpData[20] >> 4];
+ 272   3      //                      Data[tmpDataLen++] = QuickTransferTable_1[tmpData[20] & 0x0F];
+ 273   3      //                      Data[tmpDataLen++] = QuickTransferTable_1[tmpData[21] >> 4];
+ 274   3      //                      Data[tmpDataLen++] = QuickTransferTable_1[tmpData[21] & 0x0F];
+ 275   3                              
+ 276   3                              Data[tmpDataLen++] = '"';
+ 277   3                              Data[tmpDataLen++] = '}';
+ 278   3                              Data[tmpDataLen++] = ',';
+ 279   3                              
+ 280   3                              MiddlewareData_Free(MiddlewareData_ReceiveDataNormal);
+ 281   3                      }
+ 282   2                      if (Data[tmpDataLen - 1] == ',')
+ 283   2                      {
+ 284   3                              Data[tmpDataLen - 1] = ']';
+ 285   3                      }
+ 286   2                      Data[tmpDataLen++] = '}';
+ 287   2              }
+ 288   1              // 可能性极低
+ 289   1              else
+ 290   1              {
+ 291   2                      MiddlewareData_Empty_ReceiveDataNormal();
+ 292   2                      
+ 293   2                      return;
+ 294   2              }
+ 295   1              
+ 296   1              // 负载长度字段
+ 297   1              //
+C51 COMPILER V9.54   MIDDLEWARE_DEVICEPARAMETER                                            01/10/2017 18:08:21 PAGE 6   
+
+ 298   1              Data[2] = (tmpDataLen - 8) >> 8;
+ 299   1              
+ 300   1              Data[3] = (tmpDataLen - 8) ;
+ 301   1              
+ 302   1      //      Ch395_Write(peerSockfd, Data, tmpDataLen);
+ 303   1      }
+ 304          
+ 305          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   2524    ----
+   CONSTANT SIZE    =    126    ----
+   XDATA SIZE       =      4      37
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  1 WARNING(S),  0 ERROR(S)

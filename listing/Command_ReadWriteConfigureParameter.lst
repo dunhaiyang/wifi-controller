@@ -1,0 +1,192 @@
+C51 COMPILER V9.54   COMMAND_READWRITECONFIGUREPARAMETER                                   01/18/2017 12:57:30 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE COMMAND_READWRITECONFIGUREPARAMETER
+OBJECT MODULE PLACED IN ..\output\Command_ReadWriteConfigureParameter.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\App\Command_Device\Command_ReadWriteConfigureParameter.c LAR
+                    -GE OPTIMIZE(8,SPEED) BROWSE INCDIR(.\HeadFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App
+                    -\Command_Conter;.\HeadFile\App\Command_DataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\Hea
+                    -dFile\App\Command_WhiteList;.\HeadFile\App\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareMenu;.\Hea
+                    -dFile\MiddlewareTask;.\HeadFile\MiddlewareWireless;.\HeadFile\MiddlewareSocket;.\HeadFile\MiddlewareWesocket) DEBUG OBJE
+                    -CTEXTEND PRINT(..\listing\Command_ReadWriteConfigureParameter.lst) OBJECT(..\output\Command_ReadWriteConfigureParameter.
+                    -obj)
+
+line level    source
+
+   1          #include "Command_ReadWriteConfigureParameter.h"
+   2          
+   3          
+   4          uint8_t ReadWriteConfigureParameter_DeviceType = 0xFF;
+   5          
+   6          
+   7          void ReadWriteConfigureParameter_DealData(uint8_t *Data)
+   8          {
+   9   1          uint8_t tmpCommandNo        = Data[0];
+  10   1          
+  11   1          uint8_t tmpCommandSerialNo  = Data[1];
+  12   1          
+  13   1          uint8_t tmpDeviceNoL        = Data[3];
+  14   1          
+  15   1          uint8_t tmpDeviceNoH        = Data[4];
+  16   1          
+  17   1          uint8_t tmpDeviceType       = Data[5];
+  18   1          
+  19   1          uint8_t tmpRepeater1        = Data[6];
+  20   1          
+  21   1          uint8_t tmpRepeater2        = Data[7];
+  22   1          
+  23   1          uint8_t tmpRepeater3        = Data[8];
+  24   1          
+  25   1          uint8_t tmpParameterNo      = Data[9];
+  26   1          
+  27   1          uint8_t tmpReadWriteFlag    = Data[10];
+  28   1          
+  29   1          uint8_t tmpWriteLen         = Data[11];
+  30   1          
+  31   1          uint16_t tmpParityValue       = 0;
+  32   1          
+  33   1          // ±£´æÉè±¸ÀàÐÍ£¬ÔÚÓ¦´ð°üÖÐÊ¹ÓÃ
+  34   1          //
+  35   1          ReadWriteConfigureParameter_DeviceType = tmpDeviceType;
+  36   1          
+  37   1          // Éè±¸±àºÅ
+  38   1          //
+  39   1          NRF905_SendBuffer[0] = tmpDeviceNoL;
+  40   1          NRF905_SendBuffer[1] = tmpDeviceNoH;
+  41   1          
+  42   1          // ÃüÁî±àºÅ
+  43   1          //
+  44   1          NRF905_SendBuffer[2] = tmpCommandNo;
+  45   1          
+  46   1          // ÃüÁîÁ÷Ë®ºÅ
+  47   1          //
+  48   1          NRF905_SendBuffer[3] = tmpCommandSerialNo;
+  49   1          
+C51 COMPILER V9.54   COMMAND_READWRITECONFIGUREPARAMETER                                   01/18/2017 12:57:30 PAGE 2   
+
+  50   1          // Ä¿µÄÖÐ¼Ì
+  51   1          //
+  52   1          NRF905_SendBuffer[4] = tmpRepeater1;
+  53   1          NRF905_SendBuffer[5] = tmpRepeater1;
+  54   1          NRF905_SendBuffer[6] = tmpRepeater2;
+  55   1          NRF905_SendBuffer[7] = tmpRepeater3;
+  56   1          
+  57   1          // Êý¾Ý£¨22×Ö½Ú£©
+  58   1          //
+  59   1          NRF905_SendBuffer[8] = 0xEB;
+  60   1          NRF905_SendBuffer[9] = tmpDeviceNoL;
+  61   1          NRF905_SendBuffer[10] = tmpDeviceNoH;
+  62   1          NRF905_SendBuffer[11] = tmpDeviceType;
+  63   1          NRF905_SendBuffer[12] = tmpParameterNo;                                     // ²ÎÊý±àºÅ
+  64   1          NRF905_SendBuffer[13] = tmpWriteLen;                                        // ²ÎÊý³¤¶È
+  65   1          if (tmpReadWriteFlag)                                                       // ¶ÁÐ´±êÖ¾£º 0 - ¶Á£¬ 1 -
+             - Ð´
+  66   1          {
+  67   2              NRF905_SendBuffer[13] |= 0x80;
+  68   2              
+  69   2              memcpy(NRF905_SendBuffer + 14, Data + 12, tmpWriteLen);
+  70   2          }
+  71   1          else
+  72   1          {
+  73   2              NRF905_SendBuffer[13] &= 0x7F;
+  74   2              
+  75   2              memset(NRF905_SendBuffer + 14, 0xEB, 16);
+  76   2          }
+  77   1          
+  78   1          // Íâ²¿ºÍÐ£Ñé
+  79   1          //
+  80   1          tmpParityValue = Temporary_CalcSumParity(NRF905_SendBuffer, 30);
+  81   1          NRF905_SendBuffer[30] = tmpParityValue;
+  82   1          NRF905_SendBuffer[31] = tmpParityValue >> 8;
+  83   1          
+  84   1          // ·¢ËÍÊý¾Ýµ½ÎÞÏßÉè±¸
+  85   1          //
+  86   1      //    Wireless_SendDataToDevice(NRF905_SendBuffer);
+  87   1              
+  88   1              // ¸ù¾ÝÖÐ¼ÌÀ´ÉèÖÃÎÞÏß·¢ËÍµÈ´ý³¬Ê±Ê±¼ä
+  89   1              //
+  90   1              Pca_Start(NRF905_SendBuffer, 0);
+  91   1      }
+  92          
+  93          
+  94          void ReadWriteConfigureParameter_SendDataToPC(uint8_t *Data)
+  95          {
+  96   1          uint8_t tmpDeviceNoL        = Data[0];
+  97   1          
+  98   1          uint8_t tmpDeviceNoH        = Data[1];
+  99   1          
+ 100   1          uint8_t tmpCommandNo        = Data[2];
+ 101   1          
+ 102   1          uint8_t tmpCommandSerialNo  = Data[3];
+ 103   1          
+ 104   1          uint8_t tmpReadWriteResult  = Data[8];
+ 105   1          
+ 106   1          uint8_t tmpParameterNo      = Data[12];
+ 107   1          
+ 108   1          uint8_t tmpRWParameterLen   = Data[13];
+ 109   1          
+ 110   1          uint8_t tmpCommandContentLen;
+C51 COMPILER V9.54   COMMAND_READWRITECONFIGUREPARAMETER                                   01/18/2017 12:57:30 PAGE 3   
+
+ 111   1          
+ 112   1          // Éè±¸±àºÅ
+ 113   1          //
+ 114   1          SocketData_SendBuffer[0] = tmpDeviceNoL;
+ 115   1          SocketData_SendBuffer[1] = tmpDeviceNoH;
+ 116   1          
+ 117   1          // Éè±¸ÀàÐÍ
+ 118   1          //
+ 119   1          SocketData_SendBuffer[2] = ReadWriteConfigureParameter_DeviceType;
+ 120   1          
+ 121   1          // ²ÎÊý±àºÅ
+ 122   1          //
+ 123   1          SocketData_SendBuffer[3] = tmpParameterNo;
+ 124   1          
+ 125   1          // ¶ÁÐ´±êÖ¾Î»
+ 126   1          //
+ 127   1          SocketData_SendBuffer[4] = ((tmpRWParameterLen & 0x80)? 0x01:0x00);
+ 128   1          
+ 129   1          // ¶ÁÐ´½á¹û
+ 130   1          //
+ 131   1          SocketData_SendBuffer[5] = tmpReadWriteResult;
+ 132   1          
+ 133   1          // ¼ÆËã×Ü¹²ÐèÒª·¢ËÍ¶àÉÙ×Ö½Ú(Éè±¸±àºÅ, Éè±¸ÀàÐÍ, ²ÎÊý±àºÅ, ¶ÁÐ´±êÖ¾Î», ¶ÁÐ´½á¹û)
+ 134   1          //
+ 135   1          tmpCommandContentLen = 6;
+ 136   1          
+ 137   1          // Èç¹ûÊÇ¶Á£¬ÄÇÃ´¾ÍÓÐÊý¾Ý
+ 138   1          //
+ 139   1          if (!SocketData_SendBuffer[4])
+ 140   1          {
+ 141   2              SocketData_SendBuffer[6] = tmpRWParameterLen & 0x7F;                        // ¶Á²ÎÊý³¤¶È
+ 142   2              
+ 143   2              memcpy(SocketData_SendBuffer + 7, Data + 14, SocketData_SendBuffer[6]);             // ¶Á²ÎÊýµÄÊý¾
+             -Ý
+ 144   2              
+ 145   2              tmpCommandContentLen += (SocketData_SendBuffer[6] + 1);                     // Òª¼ÆËãÉÏ¶Á²ÎÊýµÄ×Ö½
+             -ÚÊý
+ 146   2          }
+ 147   1          
+ 148   1          // ·¢ËÍÖÐ¼ÌÆ÷²âÊÔ°ü¸øPC
+ 149   1          //
+ 150   1          PC_SendCommand(0x1A, tmpCommandSerialNo, SocketData_SendBuffer, tmpCommandContentLen);
+ 151   1      }
+ 152          
+ 153          
+ 154          
+ 155          
+ 156          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    470    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =      1      15
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

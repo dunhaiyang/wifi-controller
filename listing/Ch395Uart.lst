@@ -1,0 +1,287 @@
+C51 COMPILER V9.54   CH395UART                                                             01/18/2017 11:05:44 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE CH395UART
+OBJECT MODULE PLACED IN ..\output\Ch395Uart.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\Arch\Ch395Uart.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(.\Hea
+                    -dFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Command_Conter;.\HeadFile\App\Command_D
+                    -ataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile\App\Command_WhiteList;.\HeadFile\A
+                    -pp\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareMenu;.\HeadFile\MiddlewareTask;.\HeadFile\Middlewa
+                    -reWireless;.\HeadFile\MiddlewareSocket;.\HeadFile\MiddlewareWesocket) DEBUG OBJECTEXTEND PRINT(..\listing\Ch395Uart.lst)
+                    - OBJECT(..\output\Ch395Uart.obj)
+
+line level    source
+
+   1          #include "Ch395Uart.h"
+   2          
+   3          
+   4          
+   5          /********************************************************************************
+   6          * Function Name  : mDelayuS
+   7          * Description    : ÑÓÊ±Ö¸¶¨Î¢ÃëÊ±¼ä,¸ù¾Ýµ¥Æ¬»úÖ÷Æµµ÷Õû,²»¾«È·
+   8          * Input          : us---ÑÓÊ±Ê±¼äÖµ
+   9          * Output         : None
+  10          * Return         : None
+  11          *******************************************************************************/
+  12          void mDelayuS(UINT8 us)
+  13          {
+  14   1          while(us --);                                                    /* MCS51@24MHz */
+  15   1      }
+  16          
+  17          /*******************************************************************************
+  18          * Function Name  : mDelaymS
+  19          * Description    : ÑÓÊ±Ö¸¶¨ºÁÃëÊ±¼ä,¸ù¾Ýµ¥Æ¬»úÖ÷Æµµ÷Õû,²»¾«È·
+  20          * Input          : ms---ÑÓÊ±Ê±¼äÖµ
+  21          * Output         : None
+  22          * Return         : None
+  23          *******************************************************************************/
+  24          void mDelaymS(UINT8 ms)
+  25          {
+  26   1          while(ms --) 
+  27   1          {
+  28   2              mDelayuS(250);
+  29   2              mDelayuS(250);
+  30   2              mDelayuS(250);
+  31   2              mDelayuS(250);
+  32   2          }
+  33   1      }
+  34          
+  35          /*******************************************************************************
+  36          * Function Name  : CH395_PORT_INIT
+  37          * Description    : Ó²¼þ³õÊ¼»¯²¿·Ö
+  38          * Input          : None
+  39          * Output         : None
+  40          * Return         : None
+  41          *******************************************************************************/
+  42          void CH395_PORT_INIT(void)
+  43          {
+  44   1          CH395_SPI_SCS = 1;
+  45   1          CH395_SPI_SCK = 1;                                               /*  SIP_CLKÎª¸ßµçÆ½£¬±¾³ÌÐòÊ¹ÓÃSPIÄ£Ê
+             -½3£¬Ò²¿ÉÒÔÊ¹ÓÃÄ£Ê½0*/
+  46   1      }
+  47          
+  48          /*******************************************************************************
+  49          * Function Name  : Spi395OutByte
+C51 COMPILER V9.54   CH395UART                                                             01/18/2017 11:05:44 PAGE 2   
+
+  50          * Description    : ÏòCH395·¢ËÍ8Î»Êý¾Ý
+  51          * Input          : None
+  52          * Output         : None
+  53          * Return         : None
+  54          *******************************************************************************/
+  55          void Spi395OutByte(UINT8 mdata)                                      /* SPIÊä³ö8Î»Êý¾Ý */
+  56          {                                                                    /* Èç¹ûÊÇÓ²¼þSPI£¬ÔÚÖ»ÐèÒª½«Êý¾ÝÐ´ÈëS
+             -PIµÄÊý¾Ý¼Ä´æÆ÷ÖÐ */
+  57   1          UINT8   i;                                                       /* È»ºóµÈ´ý·¢ËÍÍê³É¼´¿É */
+  58   1      
+  59   1          for ( i = 0; i < 8; i ++ ) 
+  60   1          {
+  61   2              CH395_SPI_SCK = 0;                                           /* CLKÀ­µÍ */
+  62   2              if( mdata & 0x80 )CH395_SPI_SDI = 1; 
+  63   2              else CH395_SPI_SDI = 0;
+  64   2              mdata <<= 1;                                                 /* Êý¾ÝÎ»ÊÇ¸ßÎ»ÔÚÇ° */
+  65   2              CH395_SPI_SCK = 1;                                           /* CH395ÔÚÊ±ÖÓÉÏÉýÑØ²ÉÑùÊäÈë */
+  66   2          }
+  67   1      }
+  68          
+  69          /*******************************************************************************
+  70          * Function Name  : Spi395InByte
+  71          * Description    : ´ÓCH395¶Á8Î»Êý¾Ý
+  72          * Input          : None
+  73          * Output         : None
+  74          * Return         : 8Î»Êý¾Ý
+  75          *******************************************************************************/
+  76          UINT8 Spi395InByte(void)                                             /* SPIÊäÈë8Î»Êý¾Ý */
+  77          {                                                                    /* Èç¹ûÊÇÓ²¼þSPI½Ó¿Ú,Ó¦¸ÃÊÇÏÈ²éÑ¯SPI×
+             -´Ì¬¼Ä´æÆ÷ÒÔµÈ´ýSPI×Ö½Ú*/
+  78   1          UINT8   i, d;                                                    /* ´«ÊäÍê³É,È»ºó´ÓSPIÊý¾Ý¼Ä´æÆ÷¶Á³öÊý
+             -¾Ý */
+  79   1          d = 0;
+  80   1      
+  81   1          for ( i = 0; i < 8; i ++ )  
+  82   1          {
+  83   2              CH395_SPI_SCK = 0;                                           /* CH395ÔÚÊ±ÖÓÏÂ½µÑØÊä³ö */
+  84   2              d <<= 1;  /* Êý¾ÝÎ»ÊÇ¸ßÎ»ÔÚÇ° */
+  85   2              if ( CH395_SPI_SDO) d ++;
+  86   2              CH395_SPI_SCK = 1;
+  87   2          }
+  88   1          return( d );
+  89   1      }
+  90          
+  91          /*******************************************************************************
+  92          * Function Name  : xWriteCH395Cmd
+  93          * Description    : ÏòCH395·¢ËÍ8Î»ÃüÁîÂë
+  94          * Input          : 8Î»ÃüÁîÂë
+  95          * Output         : None
+  96          * Return         : None
+  97          *******************************************************************************/
+  98          void xWriteCH395Cmd(UINT8 cmd)                                       /* ÏòCH395Ð´ÃüÁî */
+  99          {
+ 100   1          xEndCH395Cmd();                                                  /* ·ÀÖ¹CSÔ­À´ÎªµÍ£¬ÏÈ½«CDÖÃ¸ß */
+ 101   1          xCH395CmdStart( );                                               /* ÃüÁî¿ªÊ¼£¬±ØÐëCSÀ­µÍ */
+ 102   1          Spi395OutByte(cmd);                                              /* Ó²¼þSPI·¢ËÍ8Î»ÃüÁîÂë */
+ 103   1          mDelayuS(2);                                                     /* ±ØÒªÑÓÊ±,ÑÓÊ±1.5uSÈ·±£¶ÁÐ´ÖÜÆÚ²»Ð¡
+             -ÓÚ1.5uS */
+ 104   1      }
+ 105          
+ 106          /********************************************************************************
+ 107          * Function Name  : xWriteCH395Data
+C51 COMPILER V9.54   CH395UART                                                             01/18/2017 11:05:44 PAGE 3   
+
+ 108          * Description    : ÏòCH395·¢ËÍ8Î»Êý¾Ý
+ 109          * Input          : 8Î»Êý¾Ý
+ 110          * Output         : None
+ 111          * Return         : None
+ 112          *******************************************************************************/
+ 113          void  xWriteCH395Data(UINT8 mdata)                                  /* ÏòCH395Ð´Êý¾Ý */
+ 114          {   
+ 115   1          Spi395OutByte(mdata);                                                      
+ 116   1      }
+ 117          
+ 118          /********************************************************************************
+ 119          * Function Name  : xReadCH395Data
+ 120          * Description    : ´ÓCH395¶Á¶ÁÊý¾Ý
+ 121          * Input          : None 
+ 122          * Output         : None
+ 123          * Return         : 8Î»Êý¾Ý
+ 124          *******************************************************************************/
+ 125          UINT8   xReadCH395Data( void )                                       /* ´ÓCH395¶ÁÊý¾Ý */
+ 126          {
+ 127   1          UINT8 i;
+ 128   1          i = Spi395InByte( );
+ 129   1          return i;
+ 130   1      }
+ 131          
+ 132          
+ 133          
+ 134          
+ 135          
+ 136          
+ 137          
+ 138          
+ 139          
+ 140          
+ 141          
+ 142          
+ 143          
+ 144          
+ 145          
+ 146          //#define CH395_INT_WIRE             INT1                          /* ¼Ù¶¨CH395µÄINT#Òý½Å,Èç¹ûÎ´Á¬½ÓÄÇÃ´Ò²
+             -¿ÉÒÔÍ¨¹ý²éÑ¯´®¿ÚÖÐ¶Ï×´Ì¬ÂëÊµÏÖ */
+ 147          
+ 148          //#define UART_INIT_BAUDRATE         115200                        /* Ä¬ÈÏÍ¨Ñ¶²¨ÌØÂÊ9600bps,½¨ÒéÍ¨¹ýÓ²¼þÒý
+             -½ÅÉè¶¨Ö±½ÓÑ¡Ôñ¸ü¸ßµÄCH395µÄÄ¬ÈÏÍ¨Ñ¶²¨ÌØÂÊ */
+ 149          //#define UART_WORK_BAUDRATE         115200                        /* ÕýÊ½Í¨Ñ¶²¨ÌØÂÊ57600bps */
+ 150          
+ 151          //#define S2TI    0x02
+ 152          //#define S2RI    0x01
+ 153          
+ 154          
+ 155          ///*******************************************************************************
+ 156          //* Function Name  : CH395_PORT_INIT
+ 157          //* Description    : ²¨ÌØÂÊÎª115200
+ 158          //* Input          : None
+ 159          //* Output         : None
+ 160          //* Return         : None
+ 161          //*******************************************************************************/
+ 162          //void CH395_InitUart2(void)
+ 163          //{
+ 164          //}
+ 165          
+ 166          ///*******************************************************************************
+ 167          //* Function Name  : Set_MCU_BaudRate
+C51 COMPILER V9.54   CH395UART                                                             01/18/2017 11:05:44 PAGE 4   
+
+ 168          //* Description    : ÉèÖÃµ¥Æ¬»ú²¨ÌØÂÊ
+ 169          //*                  ½«µ¥Æ¬»úÇÐ»»µ½ÕýÊ½Í¨Ñ¶²¨ÌØÂÊ 
+ 170          //* Input          : None
+ 171          //* Output         : None
+ 172          //* Return         : None
+ 173          //*******************************************************************************/
+ 174          //void SetMCUBaudRate(void)                                
+ 175          //{
+ 176          //////  TL2 = RCAP2L = 0 - 18432000/32/UART_WORK_BAUDRATE;               /* 18.432MHz¾§Õñ */
+ 177          ////    TL2 = RCAP2L = 0 - 24000000/32/UART_WORK_BAUDRATE;               /* 24MHz¾§Õñ */
+ 178          ////    RI = 0;
+ 179          //}
+ 180          
+ 181          
+ 182          ///********************************************************************************
+ 183          //* Function Name  : xWriteCH395Cmd
+ 184          //* Description    : ÏòCH395Ð´ÃüÁî
+ 185          //* Input          : cmd 8Î»µÄÃüÁîÂë
+ 186          //* Output         : None
+ 187          //* Return         : None
+ 188          //*******************************************************************************/
+ 189          //void xWriteCH395Cmd(UINT8 cmd)                                      
+ 190          //{
+ 191          //      S2CON &= ~S2TI;
+ 192          //    S2BUF = SER_SYNC_CODE1;                                           /* Æô¶¯²Ù×÷µÄµÚ1¸ö´®¿ÚÍ¬²½Âë */
+ 193          //    while((S2CON & S2TI) == 0) ;
+ 194          //      
+ 195          //      S2CON &= ~S2TI;
+ 196          //    S2BUF = SER_SYNC_CODE2;                                           /* Æô¶¯²Ù×÷µÄµÚ2¸ö´®¿ÚÍ¬²½Âë */
+ 197          //    while((S2CON & S2TI) == 0) ;
+ 198          //      
+ 199          //      S2CON &= ~S2TI;
+ 200          //    S2BUF = cmd;                                                      /* ´®¿ÚÊä³ö */
+ 201          //    while((S2CON & S2TI) == 0) ;
+ 202          //      
+ 203          //      S2CON &= ~S2RI;
+ 204          //}
+ 205          
+ 206          ///********************************************************************************
+ 207          //* Function Name  : xWriteCH395Data
+ 208          //* Description    : ÏòCH395Ð´Êý¾Ý
+ 209          //* Input          : mdata 8Î»Êý¾Ý
+ 210          //* Output         : None
+ 211          //* Return         : None
+ 212          //*******************************************************************************/
+ 213          //void  xWriteCH395Data(UINT8 mdata)
+ 214          //{                                                                     /* ÏòCH395Ð´Êý¾Ý */
+ 215          //    S2CON &= ~S2TI;
+ 216          //    S2BUF = mdata;                                                    /* ´®¿ÚÊä³ö */
+ 217          //    while((S2CON & S2TI) == 0);
+ 218          //}
+ 219          
+ 220          ///********************************************************************************
+ 221          //* Function Name  : xReadCH395Data
+ 222          //* Description    : ´ÓCH395¶ÁÊý¾Ý
+ 223          //* Input          : None
+ 224          //* Output         : None
+ 225          //* Return         : 8Î»Êý¾Ý
+ 226          //*******************************************************************************/
+ 227          //UINT8  xReadCH395Data(void)                                          /* ´ÓCH395¶ÁÊý¾Ý */
+ 228          //{
+ 229          //    UINT32 xdata i;
+C51 COMPILER V9.54   CH395UART                                                             01/18/2017 11:05:44 PAGE 5   
+
+ 230          //    
+ 231          //    for(i = 0; i < 500000; i ++) 
+ 232          //    {  
+ 233          //        /* ¼ÆÊý·ÀÖ¹³¬Ê± */
+ 234          //        if(S2CON & S2RI) 
+ 235          //        {  
+ 236          //            /* ´®¿Ú½ÓÊÕµ½ */
+ 237          //                      S2CON &= ~S2RI;
+ 238          //            return(S2BUF);                                            /* ´®¿ÚÊäÈë */
+ 239          //        }
+ 240          //    }
+ 241          //    return(0);                                                       /* ²»Ó¦¸Ã·¢ÉúµÄÇé¿ö */
+ 242          //}
+ 243          
+ 244          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    102    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

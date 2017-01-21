@@ -1,0 +1,106 @@
+C51 COMPILER V9.54   COMMAND_HOOKFUNCTION                                                  01/18/2017 12:57:28 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE COMMAND_HOOKFUNCTION
+OBJECT MODULE PLACED IN ..\output\Command_HookFunction.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\App\Command_DataStructure\Command_HookFunction.c LARGE OPTIM
+                    -IZE(8,SPEED) BROWSE INCDIR(.\HeadFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Command
+                    -_Conter;.\HeadFile\App\Command_DataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile\Ap
+                    -p\Command_WhiteList;.\HeadFile\App\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareMenu;.\HeadFile\Mi
+                    -ddlewareTask;.\HeadFile\MiddlewareWireless;.\HeadFile\MiddlewareSocket;.\HeadFile\MiddlewareWesocket) DEBUG OBJECTEXTEND
+                    - PRINT(..\listing\Command_HookFunction.lst) OBJECT(..\output\Command_HookFunction.obj)
+
+line level    source
+
+   1          #include "Command_HookFunction.h"
+   2          
+   3          
+   4          // =====================  线程相关的钩子函数  ============================
+   5          //
+   6          // 接收PC数据的钩子函数
+   7          //
+   8          void HookFunction_ReceivePcData(void)
+   9          {
+  10   1              // 清除心跳无应答次数，原因是可能PC数据收发负担比较重，心跳回答来不及）
+  11   1              //
+  12   1              ControlerInfo.HeartbeatNotAckTimes = 0;
+  13   1      }
+  14          
+  15          
+  16          // =====================  控制器指令相关的钩子函数  ============================
+  17          //
+  18          // 心跳相关的钩子函数
+  19          //
+  20          void HookFunction_HeartbeatReq(void)
+  21          {
+  22   1              // 实现N次没有心跳应答，那么就断定控制器和电脑通讯已断，那么就停止轮询
+  23   1              //
+  24   1              if (ControlerInfo.HeartbeatNotAckTimes > 3)
+  25   1              {
+  26   2                      SetStartScan(0);                                                // 停止轮询
+  27   2              }
+  28   1                      
+  29   1              // 否则就增加无应答次数
+  30   1              else
+  31   1              {
+  32   2                      ControlerInfo.HeartbeatNotAckTimes++;
+  33   2              }
+  34   1      }
+  35          
+  36          void HookFunction_HeartbeatAck(void)
+  37          {
+  38   1              // 心跳无应答次数归零
+  39   1              //
+  40   1              ControlerInfo.HeartbeatNotAckTimes = 0;
+  41   1              
+  42   1              // 恢复原始心跳间隔
+  43   1              //
+  44   1              RestoreHeartbeatInterval();
+  45   1              
+  46   1              // 首次开机标志清掉
+  47   1              //
+  48   1              ControlerInfo.FirstBootup = 0x32;
+  49   1      }
+  50          
+C51 COMPILER V9.54   COMMAND_HOOKFUNCTION                                                  01/18/2017 12:57:28 PAGE 2   
+
+  51          
+  52          // 工作模式的钩子函数
+  53          //
+  54          void HookFunction_ControlerWorkMode(void)
+  55          {
+  56   1              // 心跳无应答次数归零
+  57   1              //
+  58   1              ControlerInfo.HeartbeatNotAckTimes = 0;
+  59   1      }
+  60          
+  61          
+  62          // ====================  中继器指令相关的钩子函数  =============================
+  63          // 
+  64          
+  65          
+  66          
+  67          // ====================  设备指令相关的钩子函数  ===============================
+  68          //
+  69          
+  70          
+  71          
+  72          
+  73          
+  74          
+  75          
+  76          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     74    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

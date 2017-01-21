@@ -1,0 +1,159 @@
+C51 COMPILER V9.54   COMMAND_ONECARDDATAUPLOAD                                             01/18/2017 12:57:29 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE COMMAND_ONECARDDATAUPLOAD
+OBJECT MODULE PLACED IN ..\output\Command_OneCardDataUpload.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\App\Command_Device\Command_OneCardDataUpload.c LARGE OPTIMIZ
+                    -E(8,SPEED) BROWSE INCDIR(.\HeadFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Command_C
+                    -onter;.\HeadFile\App\Command_DataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile\App\
+                    -Command_WhiteList;.\HeadFile\App\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareMenu;.\HeadFile\Midd
+                    -lewareTask;.\HeadFile\MiddlewareWireless;.\HeadFile\MiddlewareSocket;.\HeadFile\MiddlewareWesocket) DEBUG OBJECTEXTEND P
+                    -RINT(..\listing\Command_OneCardDataUpload.lst) OBJECT(..\output\Command_OneCardDataUpload.obj)
+
+line level    source
+
+   1          #include "Command_OneCardDataUpload.h"
+   2          
+   3          
+   4          void OneCardDataUpload_SendDataToPC(uint8_t *Data)
+   5          {
+   6   1          uint8_t tmpDeviceNoL        = Data[Enum_Wirelss_DeviceNoL];
+   7   1          
+   8   1          uint8_t tmpDeviceNoH        = Data[Enum_Wirelss_DeviceNoH];
+   9   1          
+  10   1          uint8_t tmpCommandNo        = Data[Enum_Wirelss_CommandNo];      // ¬÷—Ø”¶¥∞¸”–¡Ω÷÷£∫ µ ± ˝æ› - 0xF0,
+             - Õ—ª˙ ˝æ› - 0xF1
+  11   1          
+  12   1          uint8_t tmpCommandSerialNo  = Data[Enum_Wirelss_CommandSerialNo];
+  13   1          
+  14   1          uint8_t tmpRepeater1        = Data[Enum_Wirelss_Repeater1];
+  15   1          
+  16   1          uint8_t tmpRepeater2        = Data[Enum_Wirelss_Repeater2];
+  17   1          
+  18   1          uint8_t  tmpRepeater3        = Data[Enum_Wirelss_Repeater3];
+  19   1          
+  20   1          uint8_t tmpTradeType        = Data[Enum_Wirelss_DataStart];
+  21   1          
+  22   1          int8_t  findDeviceList      = -1;                                // ≥ı ºªØŒ¥≤È’“ ß∞‹
+  23   1          
+  24   1          
+  25   1          // 1.»Áπ˚…Ë±∏¬÷—Ø”¶¥∞¸÷–”– ˝æ›(√ª”– ˝æ›µƒÃıº˛£∫»Áπ˚ « µ ± ˝æ›£¨ ≤¢«“Ωª“◊¿‡–Õ «88; ªÚ’ﬂ «±Í◊º∞ÊÕ—ª˙ ˝æ
+             -›(√≈À¯≥˝Õ‚)£¨≤¢«“ø™ ºŒÔ¿Ìµÿ÷∑∫ÕΩ· ¯ŒÔ¿Ìµÿ÷∑“ª—˘),ƒ«√¥æÕ…œ±®∏¯PC
+  26   1          //
+  27   1          if ( !((0xE0 == tmpCommandNo && 0x88 == tmpTradeType) || 
+  28   1                       (0x02 == tmpCommandNo && 22 != DevicePool_DeviceType && !memcmp(Data + 12, Data + 15, 3) && Data[9] == 
+             -0)) )
+  29   1          {
+  30   2              // …Ë±∏±‡∫≈
+  31   2              //
+  32   2              SocketData_SendBuffer[0] = tmpDeviceNoL;
+  33   2              
+  34   2              SocketData_SendBuffer[1] = tmpDeviceNoH;
+  35   2              
+  36   2              // …Ë±∏¿‡–Õ
+  37   2              //
+  38   2              SocketData_SendBuffer[2] = DevicePool_DeviceType;
+  39   2              
+  40   2              // ÷–ºÃ123
+  41   2              //
+  42   2              SocketData_SendBuffer[3] = tmpRepeater1;
+  43   2              
+  44   2              SocketData_SendBuffer[4] = tmpRepeater2;
+  45   2              
+  46   2              SocketData_SendBuffer[5] = tmpRepeater3;
+  47   2              
+C51 COMPILER V9.54   COMMAND_ONECARDDATAUPLOAD                                             01/18/2017 12:57:29 PAGE 2   
+
+  48   2              //  ˝æ›¿‡–Õ(0xE0: µ ± ˝æ›£¨ 0xE2£∫Õ—ª˙ ˝æ›)
+  49   2              //
+  50   2              if (0xE0 == tmpCommandNo)                       //  µ ± ˝æ›
+  51   2              {
+  52   3                  SocketData_SendBuffer[6] = 0x31;
+  53   3              }
+  54   2              else if (0xE2 == tmpCommandNo)                  // Õ—ª˙ ˝æ›
+  55   2              {
+  56   3                  
+  57   3                  SocketData_SendBuffer[6] = 0x32;
+  58   3              }
+  59   2              else if (0x02 == tmpCommandNo)                  // ±Í◊º∞ÊµƒÕ—ª˙ ˝æ›
+  60   2              {
+  61   3                  SocketData_SendBuffer[6] = 0x33;
+  62   3              }
+  63   2              else
+  64   2              {
+  65   3                  SocketData_SendBuffer[6] = 0x34;
+  66   3              }
+  67   2              
+  68   2              // ∏¥÷∆÷˜“™ ˝æ›(22◊÷Ω⁄)
+  69   2              //
+  70   2              memcpy(SocketData_SendBuffer + 7, Data + Enum_Wirelss_DataStart, 22);
+  71   2              
+  72   2                  
+  73   2              // ∑¢ÀÕ ˝æ›…œ±®∞¸∏¯PC
+  74   2              //
+  75   2              PC_SendCommand(0xF0, tmpCommandSerialNo, SocketData_SendBuffer,  29);
+  76   2          }
+  77   1          
+  78   1          
+  79   1          // 2. ∏˘æ›…Ë±∏¿‡–Õ¿¥«¯±∂‘¥˝∆’Õ®…Ë±∏£® µ ±œ˚∑—ª˙µ»£©∫ÕÃÿ ‚…Ë±∏£®Œﬁœﬂ√≈À¯£©
+  80   1          //
+  81   1          // Ãÿ ‚…Ë±∏
+  82   1          //
+  83   1          if (22 == DevicePool_DeviceType)
+  84   1          {
+  85   2              findDeviceList = SpecialDeviceInfo_FindDeviceList(tmpDeviceNoL, tmpDeviceNoH);
+  86   2              
+  87   2              if (findDeviceList != -1)
+  88   2              {
+  89   3                  // ¬÷—Ø”¶¥≥…π¶£¨…æ≥˝Ãÿ ‚…Ë±∏¡–±Ìµƒ…Ë±∏
+  90   3                  //
+  91   3                  SpecialDeviceList[findDeviceList].deviceValidFlag = 0;
+  92   3                              
+  93   3                              if (SpecialDeviceListUsage > 0)
+  94   3                              {
+  95   4                                      SpecialDeviceListUsage--;
+  96   4                              }
+  97   3              }
+  98   2          }
+  99   1          // ∆’Õ®…Ë±∏
+ 100   1          //
+ 101   1          else
+ 102   1          {
+ 103   2              // 3.≤È’“…Ë±∏¡–±Ì÷–…Ë±∏¬∑”…≈‰÷√–≈œ¢
+ 104   2              //
+ 105   2              findDeviceList = NormalDeviceInfo_FindDeviceList(tmpDeviceNoL, tmpDeviceNoH, DevicePool_DeviceType
+             -);
+ 106   2          
+ 107   2              if (findDeviceList != -1)
+ 108   2              {
+C51 COMPILER V9.54   COMMAND_ONECARDDATAUPLOAD                                             01/18/2017 12:57:29 PAGE 3   
+
+ 109   3                  // ¬÷—Ø”¶¥≥…π¶£¨ƒ«√¥¬÷—Ø ß∞‹¥Œ ˝«Â¡„
+ 110   3                  //
+ 111   3                  NormalDeviceList[findDeviceList].deviceFailTimes = 0;
+ 112   3                      
+ 113   3                  // ‘⁄œﬂ…Ë±∏£¨…Ë÷√…Ë±∏◊¥Ã¨Œ™‘⁄œﬂ
+ 114   3                  //
+ 115   3                  NormalDeviceList[findDeviceList].deviceOnline = 1;
+ 116   3              }
+ 117   2          }
+ 118   1      }
+ 119          
+ 120          
+ 121          
+ 122          
+ 123          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    483    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----      11
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

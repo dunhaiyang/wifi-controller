@@ -1,0 +1,286 @@
+C51 COMPILER V9.54   COMMAND_CONTROLERINFO                                                 01/18/2017 12:57:28 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE COMMAND_CONTROLERINFO
+OBJECT MODULE PLACED IN ..\output\Command_ControlerInfo.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\App\Command_DataStructure\Command_ControlerInfo.c LARGE OPTI
+                    -MIZE(8,SPEED) BROWSE INCDIR(.\HeadFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Comman
+                    -d_Conter;.\HeadFile\App\Command_DataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile\A
+                    -pp\Command_WhiteList;.\HeadFile\App\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareMenu;.\HeadFile\M
+                    -iddlewareTask;.\HeadFile\MiddlewareWireless;.\HeadFile\MiddlewareSocket;.\HeadFile\MiddlewareWesocket) DEBUG OBJECTEXTEN
+                    -D PRINT(..\listing\Command_ControlerInfo.lst) OBJECT(..\output\Command_ControlerInfo.obj)
+
+line level    source
+
+   1          #include "Command_ControlerInfo.h"
+   2          
+   3          
+   4          ControlerInfo_Typedef   ControlerInfo;
+   5          
+   6          
+   7          #define ControlerInfo_BaseAddress                                       (512 * 100)
+   8          #define ControlerInfo_BaseAddress_Magic                         ControlerInfo_BaseAddress
+   9          #define ControlerInfo_BaseAddress_Name                          ControlerInfo_BaseAddress_Magic + 3
+  10          #define ControlerInfo_BaseAddress_Info                          ControlerInfo_BaseAddress_Name + 10
+  11          #define ControlerInfo_BaseAddress_Password                      ControlerInfo_BaseAddress_Info + 10
+  12          
+  13          
+  14          void ControlerInfo_ReadName(void)
+  15          {
+  16   1              uint8_t tmpMagic[3];
+  17   1              
+  18   1              // 读取魔幻数字，识别是否为出厂状态（即用户是否初始化过）
+  19   1              //
+  20   1              tmpMagic[0] = App_Hal_Api.parameter->read(ControlerInfo_BaseAddress_Magic + 0);
+  21   1              tmpMagic[1] = App_Hal_Api.parameter->read(ControlerInfo_BaseAddress_Magic + 1);
+  22   1              tmpMagic[2] = App_Hal_Api.parameter->read(ControlerInfo_BaseAddress_Magic + 2);
+  23   1              
+  24   1              // 如果魔幻数字不正确，那么初始化为默认的名称
+  25   1              //
+  26   1              if (tmpMagic[0] != 'F' || tmpMagic[1] != 'Q' || tmpMagic[2] != 'Y')
+  27   1              {
+  28   2                      memcpy(ControlerInfo.Name, "初始化状态", 10);
+  29   2                      
+  30   2                      memcpy(ControlerInfo.Info, "初始化状态", 10);
+  31   2                      
+  32   2                      memset(ControlerInfo.Password, 0x08, 6);
+  33   2              }
+  34   1              // 如果魔幻数字正确，那么读取用户设置的名称， 并且获取附带信息
+  35   1              //
+  36   1              else
+  37   1              {
+  38   2                      ControlerInfo.Name[0] = App_Hal_Api.parameter->read(ControlerInfo_BaseAddress_Name + 0);
+  39   2                      ControlerInfo.Name[1] = App_Hal_Api.parameter->read(ControlerInfo_BaseAddress_Name + 1);
+  40   2                      ControlerInfo.Name[2] = App_Hal_Api.parameter->read(ControlerInfo_BaseAddress_Name + 2);
+  41   2                      ControlerInfo.Name[3] = App_Hal_Api.parameter->read(ControlerInfo_BaseAddress_Name + 3);
+  42   2                      ControlerInfo.Name[4] = App_Hal_Api.parameter->read(ControlerInfo_BaseAddress_Name + 4);
+  43   2                      ControlerInfo.Name[5] = App_Hal_Api.parameter->read(ControlerInfo_BaseAddress_Name + 5);
+  44   2                      ControlerInfo.Name[6] = App_Hal_Api.parameter->read(ControlerInfo_BaseAddress_Name + 6);
+  45   2                      ControlerInfo.Name[7] = App_Hal_Api.parameter->read(ControlerInfo_BaseAddress_Name + 7);
+  46   2                      ControlerInfo.Name[8] = App_Hal_Api.parameter->read(ControlerInfo_BaseAddress_Name + 8);
+  47   2                      ControlerInfo.Name[9] = App_Hal_Api.parameter->read(ControlerInfo_BaseAddress_Name + 9);
+  48   2                      
+  49   2                      ControlerInfo.Info[0] = App_Hal_Api.parameter->read(ControlerInfo_BaseAddress_Info + 0);
+  50   2                      ControlerInfo.Info[1] = App_Hal_Api.parameter->read(ControlerInfo_BaseAddress_Info + 1);
+C51 COMPILER V9.54   COMMAND_CONTROLERINFO                                                 01/18/2017 12:57:28 PAGE 2   
+
+  51   2                      ControlerInfo.Info[2] = App_Hal_Api.parameter->read(ControlerInfo_BaseAddress_Info + 2);
+  52   2                      ControlerInfo.Info[3] = App_Hal_Api.parameter->read(ControlerInfo_BaseAddress_Info + 3);
+  53   2                      ControlerInfo.Info[4] = App_Hal_Api.parameter->read(ControlerInfo_BaseAddress_Info + 4);
+  54   2                      ControlerInfo.Info[5] = App_Hal_Api.parameter->read(ControlerInfo_BaseAddress_Info + 5);
+  55   2                      ControlerInfo.Info[6] = App_Hal_Api.parameter->read(ControlerInfo_BaseAddress_Info + 6);
+  56   2                      ControlerInfo.Info[7] = App_Hal_Api.parameter->read(ControlerInfo_BaseAddress_Info + 7);
+  57   2                      ControlerInfo.Info[8] = App_Hal_Api.parameter->read(ControlerInfo_BaseAddress_Info + 8);
+  58   2                      ControlerInfo.Info[9] = App_Hal_Api.parameter->read(ControlerInfo_BaseAddress_Info + 9);
+  59   2                      
+  60   2                      ControlerInfo.Password[0] = App_Hal_Api.parameter->read(ControlerInfo_BaseAddress_Password + 0);
+  61   2                      ControlerInfo.Password[1] = App_Hal_Api.parameter->read(ControlerInfo_BaseAddress_Password + 1);
+  62   2                      ControlerInfo.Password[2] = App_Hal_Api.parameter->read(ControlerInfo_BaseAddress_Password + 2);
+  63   2                      ControlerInfo.Password[3] = App_Hal_Api.parameter->read(ControlerInfo_BaseAddress_Password + 3);
+  64   2                      ControlerInfo.Password[4] = App_Hal_Api.parameter->read(ControlerInfo_BaseAddress_Password + 4);
+  65   2                      ControlerInfo.Password[5] = App_Hal_Api.parameter->read(ControlerInfo_BaseAddress_Password + 5);
+  66   2              }
+  67   1      }
+  68          
+  69          void ControlerInfo_WriteName(void)
+  70          {
+  71   1              // 擦除第一扇区
+  72   1              //
+  73   1              Sector_Erase(ControlerInfo_BaseAddress);                        // 擦除扇区
+  74   1              
+  75   1              // 写入魔幻数字
+  76   1              //
+  77   1              App_Hal_Api.parameter->write(ControlerInfo_BaseAddress_Magic + 0, 'F');
+  78   1              App_Hal_Api.parameter->write(ControlerInfo_BaseAddress_Magic + 1, 'Q');
+  79   1              App_Hal_Api.parameter->write(ControlerInfo_BaseAddress_Magic + 2, 'Y');
+  80   1              
+  81   1              // 用户设置的名称和附带信息
+  82   1              //
+  83   1              App_Hal_Api.parameter->write(ControlerInfo_BaseAddress_Name + 0, ControlerInfo.Name[0]);
+  84   1              App_Hal_Api.parameter->write(ControlerInfo_BaseAddress_Name + 1, ControlerInfo.Name[1]);
+  85   1              App_Hal_Api.parameter->write(ControlerInfo_BaseAddress_Name + 2, ControlerInfo.Name[2]);
+  86   1              App_Hal_Api.parameter->write(ControlerInfo_BaseAddress_Name + 3, ControlerInfo.Name[3]);
+  87   1              App_Hal_Api.parameter->write(ControlerInfo_BaseAddress_Name + 4, ControlerInfo.Name[4]);
+  88   1              App_Hal_Api.parameter->write(ControlerInfo_BaseAddress_Name + 5, ControlerInfo.Name[5]);
+  89   1              App_Hal_Api.parameter->write(ControlerInfo_BaseAddress_Name + 6, ControlerInfo.Name[6]);
+  90   1              App_Hal_Api.parameter->write(ControlerInfo_BaseAddress_Name + 7, ControlerInfo.Name[7]);
+  91   1              App_Hal_Api.parameter->write(ControlerInfo_BaseAddress_Name + 8, ControlerInfo.Name[8]);
+  92   1              App_Hal_Api.parameter->write(ControlerInfo_BaseAddress_Name + 9, ControlerInfo.Name[9]);
+  93   1              
+  94   1              App_Hal_Api.parameter->write(ControlerInfo_BaseAddress_Info + 0, ControlerInfo.Info[0]);
+  95   1              App_Hal_Api.parameter->write(ControlerInfo_BaseAddress_Info + 1, ControlerInfo.Info[1]);
+  96   1              App_Hal_Api.parameter->write(ControlerInfo_BaseAddress_Info + 2, ControlerInfo.Info[2]);
+  97   1              App_Hal_Api.parameter->write(ControlerInfo_BaseAddress_Info + 3, ControlerInfo.Info[3]);
+  98   1              App_Hal_Api.parameter->write(ControlerInfo_BaseAddress_Info + 4, ControlerInfo.Info[4]);
+  99   1              App_Hal_Api.parameter->write(ControlerInfo_BaseAddress_Info + 5, ControlerInfo.Info[5]);
+ 100   1              App_Hal_Api.parameter->write(ControlerInfo_BaseAddress_Info + 6, ControlerInfo.Info[6]);
+ 101   1              App_Hal_Api.parameter->write(ControlerInfo_BaseAddress_Info + 7, ControlerInfo.Info[7]);
+ 102   1              App_Hal_Api.parameter->write(ControlerInfo_BaseAddress_Info + 8, ControlerInfo.Info[8]);
+ 103   1              App_Hal_Api.parameter->write(ControlerInfo_BaseAddress_Info + 9, ControlerInfo.Info[9]);
+ 104   1              
+ 105   1              App_Hal_Api.parameter->write(ControlerInfo_BaseAddress_Password + 0, ControlerInfo.Password[0]);
+ 106   1              App_Hal_Api.parameter->write(ControlerInfo_BaseAddress_Password + 1, ControlerInfo.Password[1]);
+ 107   1              App_Hal_Api.parameter->write(ControlerInfo_BaseAddress_Password + 2, ControlerInfo.Password[2]);
+ 108   1              App_Hal_Api.parameter->write(ControlerInfo_BaseAddress_Password + 3, ControlerInfo.Password[3]);
+ 109   1              App_Hal_Api.parameter->write(ControlerInfo_BaseAddress_Password + 4, ControlerInfo.Password[4]);
+ 110   1              App_Hal_Api.parameter->write(ControlerInfo_BaseAddress_Password + 5, ControlerInfo.Password[5]);
+ 111   1      }
+ 112          
+C51 COMPILER V9.54   COMMAND_CONTROLERINFO                                                 01/18/2017 12:57:28 PAGE 3   
+
+ 113          
+ 114          #define Network_BaseAddress                                                     (512 * 101)     
+ 115          #define Network_BaseAddress_Magic                                       Network_BaseAddress
+ 116          #define Network_BaseAddress_LocalIp                                     (Network_BaseAddress + 3)
+ 117          #define Network_BaseAddress_LocalPort                           (Network_BaseAddress_LocalIp + 4)
+ 118          #define Network_BaseAddress_LocalGateway                        (Network_BaseAddress_LocalPort + 2)
+ 119          #define Network_BaseAddress_LocalMask                           (Network_BaseAddress_LocalGateway + 4)
+ 120          
+ 121          #define Network_BaseAddress_PeerIp                                      (Network_BaseAddress_LocalMask + 4)
+ 122          #define Network_BaseAddress_PeerPort                            (Network_BaseAddress_PeerIp + 4)
+ 123          
+ 124          
+ 125          void ControlerInfo_ReadNetworkParameter(void)
+ 126          {
+ 127   1              uint8_t tmpMagic[3];
+ 128   1              
+ 129   1              // 读取魔幻数字，识别是否为出厂状态（即用户是否初始化过）
+ 130   1              //
+ 131   1              tmpMagic[0] = App_Hal_Api.parameter->read(Network_BaseAddress_Magic + 0);
+ 132   1              tmpMagic[1] = App_Hal_Api.parameter->read(Network_BaseAddress_Magic + 1);
+ 133   1              tmpMagic[2] = App_Hal_Api.parameter->read(Network_BaseAddress_Magic + 2);
+ 134   1              
+ 135   1              // 如果魔幻数字不正确，那么初始化为默认的网络参数
+ 136   1              //
+ 137   1              if (tmpMagic[0] != 'Z' || tmpMagic[1] != 'S' || tmpMagic[2] != 'S')
+ 138   1              {
+ 139   2                      return;
+ 140   2              }
+ 141   1              // 如果魔幻数字正确，那么读取用户设置的网络参数
+ 142   1              //
+ 143   1              else
+ 144   1              {
+ 145   2                      // 本地网络参数
+ 146   2                      //
+ 147   2                      NETPARA_IP[0] = App_Hal_Api.parameter->read(Network_BaseAddress_LocalIp + 0);
+ 148   2                      NETPARA_IP[1] = App_Hal_Api.parameter->read(Network_BaseAddress_LocalIp + 1);
+ 149   2                      NETPARA_IP[2] = App_Hal_Api.parameter->read(Network_BaseAddress_LocalIp + 2);
+ 150   2                      NETPARA_IP[3] = App_Hal_Api.parameter->read(Network_BaseAddress_LocalIp + 3);
+ 151   2                      
+ 152   2                      SOCKET0_LOCALPORT =  App_Hal_Api.parameter->read(Network_BaseAddress_LocalPort + 0) << 8;
+ 153   2                      SOCKET0_LOCALPORT |= App_Hal_Api.parameter->read(Network_BaseAddress_LocalPort + 1);
+ 154   2                      
+ 155   2                      NETPARA_GATEWAY[0] = App_Hal_Api.parameter->read(Network_BaseAddress_LocalGateway + 0);
+ 156   2                      NETPARA_GATEWAY[1] = App_Hal_Api.parameter->read(Network_BaseAddress_LocalGateway + 1);
+ 157   2                      NETPARA_GATEWAY[2] = App_Hal_Api.parameter->read(Network_BaseAddress_LocalGateway + 2);
+ 158   2                      NETPARA_GATEWAY[3] = App_Hal_Api.parameter->read(Network_BaseAddress_LocalGateway + 3);
+ 159   2                      
+ 160   2                      NETPARA_MASK[0] = App_Hal_Api.parameter->read(Network_BaseAddress_LocalMask + 0);
+ 161   2                      NETPARA_MASK[1] = App_Hal_Api.parameter->read(Network_BaseAddress_LocalMask + 1);
+ 162   2                      NETPARA_MASK[2] = App_Hal_Api.parameter->read(Network_BaseAddress_LocalMask + 2);
+ 163   2                      NETPARA_MASK[3] = App_Hal_Api.parameter->read(Network_BaseAddress_LocalMask + 3);
+ 164   2                      
+ 165   2                      // 远程网络参数
+ 166   2                      //
+ 167   2                      SOCKET0_REMOTEIP[0] = App_Hal_Api.parameter->read(Network_BaseAddress_PeerIp + 0);
+ 168   2                      SOCKET0_REMOTEIP[1] = App_Hal_Api.parameter->read(Network_BaseAddress_PeerIp + 1);
+ 169   2                      SOCKET0_REMOTEIP[2] = App_Hal_Api.parameter->read(Network_BaseAddress_PeerIp + 2);
+ 170   2                      SOCKET0_REMOTEIP[3] = App_Hal_Api.parameter->read(Network_BaseAddress_PeerIp + 3);
+ 171   2                      
+ 172   2                      SOCKET0_REMOTEPORT =  App_Hal_Api.parameter->read(Network_BaseAddress_PeerPort + 0) << 8;
+ 173   2                      SOCKET0_REMOTEPORT |= App_Hal_Api.parameter->read(Network_BaseAddress_PeerPort + 1);
+ 174   2              }
+C51 COMPILER V9.54   COMMAND_CONTROLERINFO                                                 01/18/2017 12:57:28 PAGE 4   
+
+ 175   1      }
+ 176          
+ 177          void ControlerInfo_WriteNetworkParameter(void)
+ 178          {
+ 179   1              // 擦除第一扇区
+ 180   1              //
+ 181   1              App_Hal_Api.parameter->erase(Network_BaseAddress_LocalIp);                      // 擦除扇区
+ 182   1              
+ 183   1              // 写入魔幻数字
+ 184   1              //
+ 185   1              App_Hal_Api.parameter->write(Network_BaseAddress_Magic + 0, 'Z');
+ 186   1              App_Hal_Api.parameter->write(Network_BaseAddress_Magic + 1, 'S');
+ 187   1              App_Hal_Api.parameter->write(Network_BaseAddress_Magic + 2, 'S');
+ 188   1              
+ 189   1              // 本地网络参数
+ 190   1              //
+ 191   1              App_Hal_Api.parameter->write(Network_BaseAddress_LocalIp + 0, NETPARA_IP[0]);
+ 192   1              App_Hal_Api.parameter->write(Network_BaseAddress_LocalIp + 1, NETPARA_IP[1]);
+ 193   1              App_Hal_Api.parameter->write(Network_BaseAddress_LocalIp + 2, NETPARA_IP[2]);
+ 194   1              App_Hal_Api.parameter->write(Network_BaseAddress_LocalIp + 3, NETPARA_IP[3]);
+ 195   1              
+ 196   1              App_Hal_Api.parameter->write(Network_BaseAddress_LocalPort + 0, SOCKET0_LOCALPORT >> 8);
+ 197   1              App_Hal_Api.parameter->write(Network_BaseAddress_LocalPort + 1, SOCKET0_LOCALPORT);
+ 198   1              
+ 199   1              App_Hal_Api.parameter->write(Network_BaseAddress_LocalGateway + 0, NETPARA_GATEWAY[0]);
+ 200   1              App_Hal_Api.parameter->write(Network_BaseAddress_LocalGateway + 1, NETPARA_GATEWAY[1]);
+ 201   1              App_Hal_Api.parameter->write(Network_BaseAddress_LocalGateway + 2, NETPARA_GATEWAY[2]);
+ 202   1              App_Hal_Api.parameter->write(Network_BaseAddress_LocalGateway + 3, NETPARA_GATEWAY[3]);
+ 203   1              
+ 204   1              App_Hal_Api.parameter->write(Network_BaseAddress_LocalMask + 0, NETPARA_MASK[0]);
+ 205   1              App_Hal_Api.parameter->write(Network_BaseAddress_LocalMask + 1, NETPARA_MASK[1]);
+ 206   1              App_Hal_Api.parameter->write(Network_BaseAddress_LocalMask + 2, NETPARA_MASK[2]);
+ 207   1              App_Hal_Api.parameter->write(Network_BaseAddress_LocalMask + 3, NETPARA_MASK[3]);
+ 208   1              
+ 209   1              // 远程网络参数
+ 210   1              //
+ 211   1              App_Hal_Api.parameter->write(Network_BaseAddress_PeerIp + 0, SOCKET0_REMOTEIP[0]);
+ 212   1              App_Hal_Api.parameter->write(Network_BaseAddress_PeerIp + 1, SOCKET0_REMOTEIP[1]);
+ 213   1              App_Hal_Api.parameter->write(Network_BaseAddress_PeerIp + 2, SOCKET0_REMOTEIP[2]);
+ 214   1              App_Hal_Api.parameter->write(Network_BaseAddress_PeerIp + 3, SOCKET0_REMOTEIP[3]);
+ 215   1              
+ 216   1              App_Hal_Api.parameter->write(Network_BaseAddress_PeerPort + 0, SOCKET0_REMOTEPORT >> 8);
+ 217   1              App_Hal_Api.parameter->write(Network_BaseAddress_PeerPort + 1, SOCKET0_REMOTEPORT);
+ 218   1      }
+ 219          
+ 220          
+ 221          void ControlerInfo_Init(void)
+ 222          {
+ 223   1              SetStartScan(0);
+ 224   1              
+ 225   1              SetHeartbeatNotAckTimes(0);
+ 226   1              
+ 227   1              SetFirstBootUp(0x31);
+ 228   1              
+ 229   1              SetHeartbeatInterval(5); SetHeartbeatIntervalBak(5);
+ 230   1              
+ 231   1              ControlerInfo.Version[0] = 0x17;                                                                // 控制器版本号
+ 232   1              ControlerInfo.Version[1] = 0x01;
+ 233   1              ControlerInfo.Version[2] = 0x18;
+ 234   1              
+ 235   1              ControlerInfo_ReadName();                                                                               // 读取控制器名字
+ 236   1              
+C51 COMPILER V9.54   COMMAND_CONTROLERINFO                                                 01/18/2017 12:57:28 PAGE 5   
+
+ 237   1              ControlerInfo_ReadNetworkParameter();                                                   // 读取网络参数
+ 238   1              
+ 239   1      #ifdef  USING_MODULE_NETWORK
+ 240   1              
+ 241   1              App_Hal_Api.network->reboot();                                                                                                                  // 重启网络模块
+ 242   1              
+ 243   1      #endif
+ 244   1      }
+ 245          
+ 246          
+ 247          
+ 248          
+ 249          
+ 250          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   3625    ----
+   CONSTANT SIZE    =     11    ----
+   XDATA SIZE       =     33       6
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

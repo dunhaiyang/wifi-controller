@@ -1,0 +1,117 @@
+C51 COMPILER V9.54   MIDDLEWARE_TASK                                                       01/20/2017 14:38:16 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE MIDDLEWARE_TASK
+OBJECT MODULE PLACED IN ..\output\Middleware_Task.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\MiddlewareTask\Middleware_Task.c LARGE OPTIMIZE(8,SPEED) BRO
+                    -WSE INCDIR(.\HeadFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Command_Conter;.\HeadFi
+                    -le\App\Command_DataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile\App\Command_WhiteL
+                    -ist;.\HeadFile\App\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareMenu;.\HeadFile\MiddlewareTask;.\H
+                    -eadFile\MiddlewareWireless;.\HeadFile\MiddlewareSocket;.\HeadFile\MiddlewareWesocket) DEBUG OBJECTEXTEND PRINT(..\listin
+                    -g\Middleware_Task.lst) OBJECT(..\output\Middleware_Task.obj)
+
+line level    source
+
+   1          #include "Middleware_Task.h"
+   2          
+   3          
+   4          
+   5          // 轮询任务
+   6          //
+   7          bool PollDeviceTask(void)
+   8          {
+   9   1              if (IsStartScan() &&
+  10   1                      (WiresslessChannel_Status == WirelessChannel_Free))                                                                     // 开启轮询，无线信道空闲，那么就轮询
+  11   1              {
+  12   2                      if (DevicePool_SendDataToDevice())
+  13   2                      {
+  14   3                              App_Hal_Api.led->setTime(GREEN_LED, 2);                                                                                         // 亮绿灯
+  15   3                              
+  16   3      //                      printf("111\r\n");
+  17   3                              
+  18   3                              return 1;
+  19   3                      }
+  20   2              }
+  21   1              return 0;
+  22   1      }
+  23          
+  24          
+  25          // 伪终端任务
+  26          //
+  27          bool ConsoleRunTask(void)
+  28          {
+  29   1              App_Hal_Api.console->run();
+  30   1              
+  31   1              return 1;
+  32   1      }
+  33          
+  34          
+  35          // 周期性任务
+  36          //
+  37          bool PeriodTask(void)
+  38          {
+  39   1      //      App_Hal_Api.hardware->feedWatchdog();
+  40   1                      
+  41   1              if (0 == --ControlerInfo.HeartbeatInterval)
+  42   1              {
+  43   2                      RestoreHeartbeatInterval();                                                                                                                             // 心跳计时重置
+  44   2                      
+  45   2                      Heartbeat_SendDataToPC();                                                                                                                               // 发送心跳包
+  46   2                      
+  47   2      //              App_Hal_Api.wireless->changeChannel(0x07);
+  48   2                      
+  49   2                      App_Hal_Api.led->setTime(YELLOW_LED, 2);                                                                                                // 亮绿灯
+  50   2              }
+C51 COMPILER V9.54   MIDDLEWARE_TASK                                                       01/20/2017 14:38:16 PAGE 2   
+
+  51   1                      
+  52   1              return 1;
+  53   1      }
+  54          
+  55          
+  56          /*
+  57                  任务调度表 - 所有正式的任务不是在fast_loop中，都应该列在这里
+  58                  第一个成员变量是任务函数
+  59                  第二个成员变量是任务函数调用的频率，单位是（5ms）
+  60                  第三个成员变量是任务函数需要的最大延迟执行时间，单位是（1ms）
+  61          */
+  62          Task    task[3] = {
+  63                  
+  64                  // 轮询任务 (5ms一次，最大执行延迟不要超过5ms)
+  65                  //
+  66                  {PollDeviceTask,                6,              40},
+  67                  
+  68                  // 伪终端任务 (30ms一次，最大执行延迟不要超过50ms)
+  69                  //
+  70                  {ConsoleRunTask,                6,              40},
+  71                  
+  72                  // 周期性任务（1000ms一次，最大执行延迟不要超过1200ms）
+  73                  //
+  74                  {PeriodTask,                    200,    1200},
+  75          };
+  76          
+  77          
+  78          
+  79          
+  80          
+  81          
+  82          
+  83          
+  84          
+  85          
+  86          
+  87          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    124    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     45    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

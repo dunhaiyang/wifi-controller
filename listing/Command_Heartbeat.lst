@@ -1,0 +1,120 @@
+C51 COMPILER V9.54   COMMAND_HEARTBEAT                                                     01/18/2017 12:57:29 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE COMMAND_HEARTBEAT
+OBJECT MODULE PLACED IN ..\output\Command_Heartbeat.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\App\Command_Conter\Command_Heartbeat.c LARGE OPTIMIZE(8,SPEE
+                    -D) BROWSE INCDIR(.\HeadFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Command_Conter;.\
+                    -HeadFile\App\Command_DataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile\App\Command_
+                    -WhiteList;.\HeadFile\App\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareMenu;.\HeadFile\MiddlewareTa
+                    -sk;.\HeadFile\MiddlewareWireless;.\HeadFile\MiddlewareSocket;.\HeadFile\MiddlewareWesocket) DEBUG OBJECTEXTEND PRINT(..\
+                    -listing\Command_Heartbeat.lst) OBJECT(..\output\Command_Heartbeat.obj)
+
+line level    source
+
+   1          #include "Command_Heartbeat.h"
+   2          
+   3          
+   4          void Heartbeat_SendDataToPC(void)
+   5          {
+   6   1          uint8_t i;
+   7   1          uint8_t howManyDeviceList = 0;
+   8   1              uint8_t DeviceListStatus = 0;
+   9   1          
+  10   1          // 1. 获取所有有效设备列表的设备状态
+  11   1          //
+  12   1          for (i = 0; i < NormalDeviceListSum; ++i)
+  13   1          {
+  14   2              // 找到有效设备列表数据，填充进心跳包中，然后发送给PC
+  15   2              //
+  16   2              if (NormalDeviceList[i].deviceValidFlag)
+  17   2              {
+  18   3                              
+  19   3                              // 填充设备列表的状态
+  20   3                              //
+  21   3                              if (NormalDeviceList[i].deviceOnline)
+  22   3                              {
+  23   4                                      DeviceListStatus = 0x01;
+  24   4                              }
+  25   3                              else
+  26   3                              {
+  27   4                                      DeviceListStatus = 0x00;
+  28   4                              }
+  29   3                              
+  30   3                              // 设备总数计数
+  31   3                              //
+  32   3                  howManyDeviceList++;
+  33   3                              
+  34   3                              // 填充设备列表的信息
+  35   3                              //
+  36   3                              SocketData_SendBuffer[(howManyDeviceList - 1) * 4 + 1] = NormalDeviceList[i].deviceNumber[0];
+  37   3                              SocketData_SendBuffer[(howManyDeviceList - 1) * 4 + 2] = NormalDeviceList[i].deviceNumber[1];
+  38   3                              SocketData_SendBuffer[(howManyDeviceList - 1) * 4 + 3] = NormalDeviceList[i].deviceType;
+  39   3                              SocketData_SendBuffer[(howManyDeviceList - 1) * 4 + 4] = DeviceListStatus;
+  40   3              }
+  41   2          }
+  42   1          
+  43   1          // 2. 有效设备总数
+  44   1          //
+  45   1          SocketData_SendBuffer[0] = howManyDeviceList;
+  46   1          
+  47   1          
+  48   1          // 3. 控制器的状态（年月日时分秒）
+  49   1          //
+  50   1              SocketData_SendBuffer[(howManyDeviceList - 1) * 4 + 5] = IsStartScan()? 0x31:0x32;
+C51 COMPILER V9.54   COMMAND_HEARTBEAT                                                     01/18/2017 12:57:29 PAGE 2   
+
+  51   1              SocketData_SendBuffer[(howManyDeviceList - 1) * 4 + 6] = ControlerInfo.FirstBootup;
+  52   1          
+  53   1          // 4. 主动发送心跳指令(0x71号指令)给PC
+  54   1          //
+  55   1          PC_SendCommand(0x71, DeviceDataSerialNo++, SocketData_SendBuffer,  howManyDeviceList * 4 + 3);
+  56   1              
+  57   1              // 5. 心跳请求的钩子函数
+  58   1              //
+  59   1              HookFunction_HeartbeatReq();
+  60   1      }
+  61          
+  62          
+  63          void Heartbeat_DealData(uint8_t *Data)
+  64          {
+  65   1          // 把BCD码转化成整数
+  66   1          //
+  67   1          SysTime.year    = DCB(Data[Enum_CommandContent + 0]);
+  68   1          
+  69   1          SysTime.month   = DCB(Data[Enum_CommandContent + 1]);
+  70   1          
+  71   1          SysTime.day     = DCB(Data[Enum_CommandContent + 2]);
+  72   1          
+  73   1          SysTime.week    = DCB(Data[Enum_CommandContent + 3]);
+  74   1          
+  75   1          SysTime.hour    = DCB(Data[Enum_CommandContent + 4]);
+  76   1          
+  77   1          SysTime.minute  = DCB(Data[Enum_CommandContent + 5]);
+  78   1          
+  79   1          SysTime.second  = DCB(Data[Enum_CommandContent + 6]);
+  80   1              
+  81   1              // 心跳应答的钩子函数
+  82   1              //
+  83   1              HookFunction_HeartbeatAck();
+  84   1      }
+  85          
+  86          
+  87          
+  88          
+  89          
+  90          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    444    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,220 @@
+C51 COMPILER V9.54   COMMAND_NORMALDEVICEINFO                                              01/20/2017 14:38:16 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE COMMAND_NORMALDEVICEINFO
+OBJECT MODULE PLACED IN ..\output\Command_NormalDeviceInfo.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\App\Command_DataStructure\Command_NormalDeviceInfo.c LARGE O
+                    -PTIMIZE(8,SPEED) BROWSE INCDIR(.\HeadFile\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Com
+                    -mand_Conter;.\HeadFile\App\Command_DataStructure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFil
+                    -e\App\Command_WhiteList;.\HeadFile\App\Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareMenu;.\HeadFil
+                    -e\MiddlewareTask;.\HeadFile\MiddlewareWireless;.\HeadFile\MiddlewareSocket;.\HeadFile\MiddlewareWesocket) DEBUG OBJECTEX
+                    -TEND PRINT(..\listing\Command_NormalDeviceInfo.lst) OBJECT(..\output\Command_NormalDeviceInfo.obj)
+
+line level    source
+
+   1          #include "Command_NormalDeviceInfo.h"
+   2          
+   3          
+   4          
+   5          // 设备列表, 设备列表元素数量
+   6          //
+   7          NormalDeviceInfo_Typedef NormalDeviceList[NormalDeviceListSum];
+   8          
+   9          
+  10          
+  11          // 已经存储了多少设备列表
+  12          //
+  13          uint8_t   NormalDeviceListUsage = 0;
+  14          
+  15          
+  16          // 设备数据的流水号
+  17          //
+  18          uint8_t    DeviceDataSerialNo = 0;
+  19          
+  20          
+  21          // ============================================== 设备列表相关操作 =======================================
+             -===========
+  22          // =======================================================================================================
+             -==========
+  23          
+  24          
+  25          // 初始化设备列表
+  26          //
+  27          void NormalDeviceInfo_Init(void)
+  28          {
+  29   1          uint8_t index;
+  30   1          
+  31   1          for (index = 0; index < NormalDeviceListSum; ++index)
+  32   1          {
+  33   2              // 设置为无效，失败次数为0， 状态为正常， 使用主路由, 没有等待轮询设备应答
+  34   2              //
+  35   2              NormalDeviceList[index].deviceValidFlag = 0;
+  36   2              
+  37   2              NormalDeviceList[index].deviceFailTimes = 0;
+  38   2                              
+  39   2                      NormalDeviceList[index].deviceOnline = 0;
+  40   2              
+  41   2              NormalDeviceList[index].usingDeviceRouteNow = 0;
+  42   2          }
+  43   1          
+  44   1          NormalDeviceListUsage = 0;
+  45   1      }
+  46          
+  47          
+  48          // 查找指定数据, 返回-1表示找不到，其他值标志找到的下标
+C51 COMPILER V9.54   COMMAND_NORMALDEVICEINFO                                              01/20/2017 14:38:16 PAGE 2   
+
+  49          //
+  50          int8_t NormalDeviceInfo_FindDeviceList(uint8_t deviceNoL, uint8_t deviceNoH, uint8_t deviceType)
+  51          {
+  52   1          uint8_t index;
+  53   1          
+  54   1          for (index = 0; index < NormalDeviceListSum; index++)
+  55   1          {
+  56   2              if (NormalDeviceList[index].deviceValidFlag
+  57   2                  && NormalDeviceList[index].deviceNumber[0] == deviceNoL
+  58   2                  && NormalDeviceList[index].deviceNumber[1] == deviceNoH
+  59   2                  && NormalDeviceList[index].deviceType == deviceType)
+  60   2              {
+  61   3                  return index;
+  62   3              }
+  63   2          }
+  64   1          
+  65   1          return -1;
+  66   1      }
+  67          
+  68          
+  69          
+  70          // 增加设备列表
+  71          //
+  72          bool NormalDeviceInfo_AddDeviceList(uint8_t *deviceListAddress)
+  73          {
+  74   1          int8_t  retValue;
+  75   1          uint8_t index;
+  76   1          
+  77   1          // 查询是否已经存在
+  78   1          //
+  79   1          retValue = NormalDeviceInfo_FindDeviceList(deviceListAddress[0], deviceListAddress[1], deviceListAddre
+             -ss[2]);
+  80   1          
+  81   1          // 之前已经添加过了，直接返回真
+  82   1          //
+  83   1          if (retValue != -1)
+  84   1          {
+  85   2              return 1;
+  86   2          }
+  87   1          
+  88   1          // 找到一个空闲地方保存
+  89   1          //
+  90   1          for (index = 0; index < NormalDeviceListSum; index++)
+  91   1          {
+  92   2              if (!NormalDeviceList[index].deviceValidFlag)
+  93   2              {
+  94   3                  NormalDeviceList[index].deviceNumber[0] = deviceListAddress[0];
+  95   3                  
+  96   3                  NormalDeviceList[index].deviceNumber[1] = deviceListAddress[1];
+  97   3                  
+  98   3                  NormalDeviceList[index].deviceType = deviceListAddress[2];
+  99   3                  
+ 100   3                  memcpy(NormalDeviceList[index].deviceMainRoute, deviceListAddress + 3, 3);
+ 101   3                  
+ 102   3                  memcpy(NormalDeviceList[index].deviceBakRoute, deviceListAddress + 6, 3);
+ 103   3                  
+ 104   3                  NormalDeviceList[index].deviceValidFlag = 1;
+ 105   3                              
+ 106   3                              NormalDeviceList[index].deviceOnline = 0;
+ 107   3                  
+ 108   3                  NormalDeviceListUsage++;
+ 109   3                  
+C51 COMPILER V9.54   COMMAND_NORMALDEVICEINFO                                              01/20/2017 14:38:16 PAGE 3   
+
+ 110   3                  return 1;
+ 111   3              }
+ 112   2          }
+ 113   1          
+ 114   1          return 0;
+ 115   1      }
+ 116          
+ 117          
+ 118          // 删除设备列表
+ 119          //
+ 120          bool NormalDeviceInfo_DeleteDeviceList(uint8_t *deviceListAddress)
+ 121          {
+ 122   1          int8_t retValue;
+ 123   1          
+ 124   1          retValue = NormalDeviceInfo_FindDeviceList(deviceListAddress[0], deviceListAddress[1], deviceListAddre
+             -ss[2]);
+ 125   1          
+ 126   1          if (retValue != -1)
+ 127   1          {
+ 128   2              NormalDeviceList[retValue].deviceValidFlag = 0;
+ 129   2              
+ 130   2              NormalDeviceListUsage--;
+ 131   2          }
+ 132   1          
+ 133   1          return 1;
+ 134   1      }
+ 135          
+ 136          
+ 137          // 清空设备列表
+ 138          //
+ 139          bool NormalDeviceInfo_EmptyDeviceList(void)
+ 140          {
+ 141   1          uint8_t index;
+ 142   1          
+ 143   1          for (index = 0; index < NormalDeviceListSum; index++)
+ 144   1          {
+ 145   2              NormalDeviceList[index].deviceValidFlag = 0;
+ 146   2          }
+ 147   1          
+ 148   1          NormalDeviceListUsage = 0;
+ 149   1          
+ 150   1          return 1;
+ 151   1      }
+ 152          
+ 153          
+ 154          
+ 155          void NormalDeviceInfo_TravelDeviceList(void)
+ 156          {
+ 157   1          static uint8_t index;
+ 158   1          
+ 159   1          for (index = 0; index < NormalDeviceListSum; index++)
+ 160   1          {
+ 161   2              if (NormalDeviceList[index].deviceValidFlag)
+ 162   2              {
+ 163   3                              App_Hal_Api.console->printDec("index:\t",       index);
+ 164   3                              App_Hal_Api.console->printDec("\tdevno:\t",     NormalDeviceList[index].deviceNumber[0] | NormalDeviceList
+             -[index].deviceNumber[1] << 8);
+ 165   3                              App_Hal_Api.console->printDecLn("\ttype:\t",    NormalDeviceList[index].deviceType);
+ 166   3                              App_Hal_Api.console->printDec("mr0:\t",         NormalDeviceList[index].deviceMainRoute[0]);
+ 167   3                              App_Hal_Api.console->printDec("\tmr1:\t",               NormalDeviceList[index].deviceMainRoute[0]);
+ 168   3                              App_Hal_Api.console->printDecLn("\tmr2:\t",     NormalDeviceList[index].deviceMainRoute[0]);
+ 169   3                              App_Hal_Api.console->printDec("br0:\t",         NormalDeviceList[index].deviceBakRoute[0]);
+C51 COMPILER V9.54   COMMAND_NORMALDEVICEINFO                                              01/20/2017 14:38:16 PAGE 4   
+
+ 170   3                              App_Hal_Api.console->printDec("\tbr1:\t",               NormalDeviceList[index].deviceBakRoute[0]);
+ 171   3                              App_Hal_Api.console->printDecLn("\tbr2:\t",     NormalDeviceList[index].deviceBakRoute[0]);
+ 172   3              }
+ 173   2          }
+ 174   1      }
+ 175          
+ 176          
+ 177          
+ 178          
+ 179          
+ 180          
+ 181          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1221    ----
+   CONSTANT SIZE    =     65    ----
+   XDATA SIZE       =    403       4
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

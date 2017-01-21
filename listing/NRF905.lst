@@ -1,0 +1,268 @@
+C51 COMPILER V9.54   NRF905                                                                01/18/2017 15:54:45 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE NRF905
+OBJECT MODULE PLACED IN ..\output\NRF905.obj
+COMPILER INVOKED BY: D:\c51_keil\C51\BIN\C51.EXE SourceFile\Arch\NRF905.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(.\HeadFi
+                    -le\Arch;.\HeadFile\OS_api;.\HeadFile\KQA_OS;.\HeadFile\App_api;.\HeadFile\App\Command_Conter;.\HeadFile\App\Command_Data
+                    -Structure;.\HeadFile\App\Command_Device;.\HeadFile\App\Command_Repeater;.\HeadFile\App\Command_WhiteList;.\HeadFile\App\
+                    -Command_Kernel;.\HeadFile\MiddlewareBoardcast;.\HeadFile\MiddlewareMenu;.\HeadFile\MiddlewareTask;.\HeadFile\MiddlewareW
+                    -ireless;.\HeadFile\MiddlewareSocket;.\HeadFile\MiddlewareWesocket) DEBUG OBJECTEXTEND PRINT(..\listing\NRF905.lst) OBJEC
+                    -T(..\output\NRF905.obj)
+
+line level    source
+
+   1          #include "NRF905.h"
+   2          
+   3          
+   4          //--- 芯片配置字结构
+   5          //
+   6          typedef struct RFConfig
+   7          {
+   8                  uint8_t n;
+   9                  uint8_t buf[ 10 ];
+  10          } RFConfig;
+  11          
+  12          
+  13          //--- 芯片配置常量
+  14          //
+  15          RFConfig RxTxConf =
+  16          {
+  17                  10,
+  18                  RFConfig_Bit0,  RFConfig_Bit1,  RFConfig_Bit2,  RFConfig_Bit3,  RFConfig_Bit4,
+  19                  RFConfig_Bit5,  RFConfig_Bit6,  RFConfig_Bit7,  RFConfig_Bit8,  RFConfig_Bit9   
+  20          };
+  21          
+  22          
+  23          // 初始化无线模块
+  24          //
+  25          void NRF905_SetWireLess(uint8_t wirelessChannel)
+  26          {
+  27   1              uint8_t i;
+  28   1              
+  29   1              PWR_UP = 0; PWR_UP = 0;
+  30   1      
+  31   1              NRF905_InitIO();                                                                                                                // Initialize IO port
+  32   1              NRF905_fSetRF(wirelessChannel);
+  33   1              NRF905_Config905();                                                                                                             // Config nRF905 module
+  34   1              CSN = 0;                                                                                                                                // Spi enable for write a spi command   
+  35   1              Spi_Write( WTA );                                                                                                               // Write TX Address  command
+  36   1              for( i = 0; i < 4; i ++ )                                                                                               // Write 4 bytes address
+  37   1              { Spi_Write( RxTxConf.buf[ i + 5 ] ); } 
+  38   1              CSN = 1;                                                                                                                                // Spi disable
+  39   1              NRF905_SetRxMode();                                                                                                             // Set nRF905 in Rx mode
+  40   1      }
+  41          
+  42          
+  43          void NRF905_InitIO(void)
+  44          {
+  45   1              CSN=1;                                          // Spi  disable                                         
+  46   1              SCK=1;                                          // Spi clock line init high
+  47   1      //      nrf905_DR=1;                            // Init DR for input
+  48   1      //      AM=1;                                           // Init AM for input
+  49   1              
+  50   1              // 设置nf905无线模块工作模式为standby模式(PWR_UP = 1, TRX_CE = 0, TX_EN = x)
+C51 COMPILER V9.54   NRF905                                                                01/18/2017 15:54:45 PAGE 2   
+
+  51   1              // RX模式(PWR_UP = 1, TRX_CE = 1, TX_EN = 0)
+  52   1              // TX模式(PWR_UP = 1, TRX_CE = 1, TX_EN = 1)
+  53   1              //
+  54   1              PWR_UP=1;                                       // nRF905 power on
+  55   1              TRX_CE=0;                                       // Set nRF905 in standby mode
+  56   1              TX_EN=0;                                        // set radio in Rx mode 
+  57   1      }
+  58          
+  59           //设置无线通讯测试(通讯频道)
+  60          //
+  61          void NRF905_fSetRF(uint8_t wirelessChannel)
+  62          {
+  63   1      //      uint8_t cTmp;
+  64   1      //
+  65   1      //      cTmp = (WirelessChannel % 20);
+  66   1      //      cTmp = cTmp * 13;               //没频段间隔1.3MHZ
+  67   1      //      cTmp = cTmp + 2;
+  68   1      //      if( cTmp >= 256 ) { cTmp -= 256; RxTxConf.buf[ 1 ] += 1; }
+  69   1      //      RxTxConf.buf[ 0 ] = cTmp;               // freq=422.4 + 84/10 = 423 + (DRV_FZ * 13) / 10 MHz 
+  70   1      
+  71   1              uint8_t  i;
+  72   1              uint16_t x;
+  73   1      
+  74   1              //--- 调节频率
+  75   1              i = (wirelessChannel % 38);
+  76   1              x = i * 13;                                                                             //每频段间隔1.3MHZ
+  77   1              x += 2;                                                                                 //频率偏差 0.2MHZ
+  78   1              RxTxConf.buf[ 0 ] = x % 256;                                    // freq=422.4 + 84/10 = 423 + (DRV_FZ * 13) / 10 MHz 
+  79   1              RxTxConf.buf[ 1 ] &= 0xFE;                                      //CH_NO[8]=0
+  80   1              if( x >= 256 ) { RxTxConf.buf[ 1 ] |= 0x01; }   //CH_NO[8]=1
+  81   1      
+  82   1              RxTxConf.buf[ 5 ] = wirelessChannel;                    // 无线信道
+  83   1      }
+  84          
+  85          
+  86          void NRF905_Config905(void)
+  87          {
+  88   1              uint8_t i;                                      
+  89   1              CSN=0;                                                          // Spi enable for write a spi command
+  90   1              Spi_Write(WC);                                          // Write config command
+  91   1              for (i=0; i<RxTxConf.n; i++)            // Write configration words
+  92   1              {
+  93   2                      Spi_Write(RxTxConf.buf[i]);
+  94   2              }
+  95   1              CSN = 1;                                                        // Disable Spi
+  96   1      }
+  97          
+  98          void Delay650us()                                               // @22.1184MHz
+  99          {
+ 100   1              uint8_t i, j;
+ 101   1      
+ 102   1              _nop_();
+ 103   1              _nop_();
+ 104   1              _nop_();
+ 105   1              i = 14;
+ 106   1              j = 248;
+ 107   1              do
+ 108   1              {
+ 109   2                      while (--j);
+ 110   2              } while (--i);
+ 111   1      }
+ 112          
+C51 COMPILER V9.54   NRF905                                                                01/18/2017 15:54:45 PAGE 3   
+
+ 113          
+ 114          void NRF905_Delay(uint8_t n)
+ 115          {
+ 116   1      //      uint16_t i;
+ 117   1      //      while(n--)
+ 118   1      //        for(i=0; i<80; i++);
+ 119   1          while (n--)
+ 120   1              Delay650us();
+ 121   1      }
+ 122          
+ 123          
+ 124          bool NRF905_HaveDataToRead(void)
+ 125          {
+ 126   1              nrf905_DR = 1; _nop_(); _nop_();
+ 127   1              
+ 128   1              if(nrf905_DR)                                                                                                                   // 无线数据非空，准备接收处理 
+ 129   1              {
+ 130   2                      return 1;
+ 131   2              }
+ 132   1              return 0;
+ 133   1      }
+ 134          
+ 135          
+ 136          void __TxPacket(uint8_t *send_buf, uint8_t *send_add)
+ 137          {
+ 138   1              uint8_t i;
+ 139   1      
+ 140   1              CSN=0;                                          // Spi enable for write a spi command
+ 141   1              Spi_Write(WTP);                         // Write payload command
+ 142   1              for (i=0;i<32;i++)
+ 143   1              {
+ 144   2                      Spi_Write(send_buf[i]);// Write 32 bytes Tx data
+ 145   2              }
+ 146   1              CSN=1;                                          // Spi disable
+ 147   1              NRF905_Delay(1);
+ 148   1              CSN=0;                                          // Spi enable for write a spi command
+ 149   1              Spi_Write(WTA);                         // Write address command
+ 150   1              for (i=0; i<4; i++)                     // Write 4 bytes address
+ 151   1              {
+ 152   2                      Spi_Write(send_add[i]);
+ 153   2              }
+ 154   1              CSN=1;                                          // Spi disable
+ 155   1              TRX_CE=1;                                       // Set TRX_CE high,start Tx data transmission
+ 156   1              NRF905_Delay(1);                        // while (DR!=1);
+ 157   1              TRX_CE=0;                                       // Set TRX_CE low
+ 158   1      }
+ 159          
+ 160          
+ 161          
+ 162          void NRF905_TxPacket(uint8_t *send_buf)
+ 163          {
+ 164   1              uint8_t tmpSendAddress[4];
+ 165   1              
+ 166   1              // 目的中继是0，直接发送给设备
+ 167   1          //
+ 168   1          if (send_buf[4] == 0)
+ 169   1          {
+ 170   2              tmpSendAddress[0] = send_buf[0];        tmpSendAddress[1] = send_buf[1];
+ 171   2                      
+ 172   2                      tmpSendAddress[2] = 0xCC;                       tmpSendAddress[3] = 0xCC;
+ 173   2          }
+ 174   1          // 目的中继不为0，发送给中继器
+C51 COMPILER V9.54   NRF905                                                                01/18/2017 15:54:45 PAGE 4   
+
+ 175   1          //
+ 176   1          else
+ 177   1          {
+ 178   2              tmpSendAddress[0] = send_buf[4];        tmpSendAddress[1] = 0xCC;
+ 179   2                      
+ 180   2                      tmpSendAddress[2] = 0xCC;                       tmpSendAddress[3] = 0xCE;
+ 181   2          }
+ 182   1          NRF905_SetTxMode();                                 // 设置无线为发送模式
+ 183   1          
+ 184   1          __TxPacket(send_buf, tmpSendAddress);               // 发送无线数据
+ 185   1          
+ 186   1          Delay1ms(3);                                        // 延时, 这个？？？？？
+ 187   1              
+ 188   1          NRF905_SetRxMode();                                 // 重新设置为接收模式
+ 189   1      }
+ 190          
+ 191          
+ 192          
+ 193          void NRF905_RxPacket(uint8_t *receive_buf)
+ 194          {
+ 195   1              uint8_t i;      
+ 196   1      
+ 197   1              TRX_CE=0;                                                       // Set nRF905 in standby mode   
+ 198   1              CSN=0;                                                          // Spi enable for write a spi command
+ 199   1              Spi_Write(RRP);                                         // Read payload command 
+ 200   1              for (i = 0; i < 32; i++)
+ 201   1              {
+ 202   2                      receive_buf[i] = Spi_Read();                    // Read data and save to buffer
+ 203   2              }
+ 204   1              CSN=1;                                                          // Disable spi
+ 205   1              while(nrf905_DR||AM);   
+ 206   1              TRX_CE=1;                       
+ 207   1      }
+ 208          
+ 209          
+ 210          
+ 211          void NRF905_SetTxMode(void)                             
+ 212          {       
+ 213   1              TX_EN=1;
+ 214   1              TRX_CE=0;
+ 215   1              NRF905_Delay(1);                                        // delay for mode change(>=650us)
+ 216   1      }
+ 217                                          
+ 218          
+ 219          
+ 220          void NRF905_SetRxMode(void)
+ 221          {
+ 222   1              TX_EN=0;
+ 223   1              TRX_CE=1;
+ 224   1              NRF905_Delay(1);                                        // delay for mode change(>=650us)                               
+ 225   1      }
+ 226          
+ 227          
+ 228          
+ 229          
+ 230          
+ 231          
+ 232          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    562    ----
+C51 COMPILER V9.54   NRF905                                                                01/18/2017 15:54:45 PAGE 5   
+
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     11      21
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
